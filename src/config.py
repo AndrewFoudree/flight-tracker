@@ -94,7 +94,9 @@ class Defaults(_Strict):
     currency: str = Field(pattern=r"^[A-Z]{3}$")
     cabin: Literal["economy", "premium_economy", "business", "first"] = "economy"
     sources: list[str] = Field(min_length=1)
-    window_step_days: int = Field(default=7, ge=1, le=30)
+    # A large step is cheap (fewer searches); only a small one costs allowance,
+    # and the budget guard handles that.
+    window_step_days: int = Field(default=7, ge=1, le=365)
     # A lap infant is free on domestic US routes and typically ~10% of the adult
     # fare plus taxes internationally. Used only by the split-booking estimate.
     infant_fare_pct: float = Field(default=0.0, ge=0, le=100)
@@ -154,7 +156,7 @@ class Route(_Strict):
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
     cabin: str | None = None
     sources: list[str] | None = Field(default=None, min_length=1)
-    window_step_days: int | None = Field(default=None, ge=1, le=30)
+    window_step_days: int | None = Field(default=None, ge=1, le=365)
     infant_fare_pct: float | None = Field(default=None, ge=0, le=100)
 
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
