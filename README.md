@@ -213,6 +213,47 @@ Two more things at booking time:
 - A 29 February birthday has no anniversary in a non-leap year. The tracker ages
   the child out on 1 March, which errs toward buying a seat.
 
+## How the tracked month was chosen
+
+Not guessed. `src/survey.py` swept 90 departure dates across Sep 2026 - Jul 2027
+for this exact route and party, then ranked the months by the median cheapest
+fare per day. Ranking on the *minimum* is useless here: $2,955 total ($492 a
+seat) is a hard floor that nearly every month touches at least once. The median
+is what tells you how likely any given date is to be cheap.
+
+| Month | n | Median | Mean | Days at the floor |
+|---|---|---|---|---|
+| **Jan 2027** | 12 | **$2,970** | **$3,058** | 6/12 |
+| Apr 2027 | 11 | $2,985 | $3,145 | 5/11 |
+| Mar 2027 | 15 | $2,985 | $3,195 | 7/15 |
+| Oct 2026 | 12 | $3,075 | $3,176 | 5/12 |
+| May 2027 | 12 | $3,120 | $3,240 | 3/12 |
+| Jun 2027 | 12 | $3,150 | $3,375 | 2/12 |
+| Feb 2027 | 10 | $3,165 | $3,176 | 2/10 |
+| Nov 2026 | 12 | $3,165 | $3,788 | 3/12 |
+| Dec 2026 | 12 | $3,201 | $3,889 | 1/12 |
+
+Three findings worth keeping:
+
+- **General "cheapest month" advice did not hold.** It points at Sep-Nov low
+  season. September was the *worst* month here ($3,705 median, never at the
+  floor) and November ranked eighth. That advice is about the destination and
+  assumes one or two travellers from a major hub.
+- **Low season is worse for a large party.** Airlines thin capacity when demand
+  softens, and six seats must come from one fare bucket. Reduced capacity hurts
+  more than soft demand helps.
+- **Day of week moves the price more than the month does.** March 16 was $2,955
+  and March 14, the same week, was $3,327 - a $372 gap on weekday alone. An
+  early sweep sampled only Tuesdays (a 14-day step from a Tuesday never leaves
+  Tuesday) and was worthless for comparison until re-run at a 3-day step, which
+  rotates through every weekday.
+
+Re-run the survey when plans change:
+
+```
+Actions -> Survey a year of fares -> Run workflow
+```
+
 ## Data
 
 `data/prices.csv` is append-only, one row per route per source per run:
