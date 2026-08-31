@@ -220,7 +220,9 @@ def test_a_leap_day_birthday_ages_out_on_the_first_of_march():
     assert turns_two_on(d(2025, 5, 20)) == d(2027, 5, 20)
 
 
-def test_without_birthdates_the_configured_counts_are_used_but_flagged():
+def test_without_birthdates_the_configured_counts_are_used_silently():
+    """Optional feature: with no birth date the config is taken as written and
+    the run stays quiet. Notes are only for a reclassification actually made."""
     config = make_config()
     assert config.passengers_for(config.routes[0]).infants == 1
-    assert "taken on trust" in config.infant_notes(config.routes[0])[0]
+    assert config.infant_notes(config.routes[0]) == []

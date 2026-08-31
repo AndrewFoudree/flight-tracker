@@ -15,6 +15,7 @@ from pathlib import Path
 
 from . import alerting, analysis
 from .config import Config, Route, load_config
+from .fetchers.account import searches_left
 from .fetchers.base import Fetcher
 from .fetchers.registry import build_fetchers
 from .models import Alert, Passengers, Quote, utcnow
@@ -47,6 +48,15 @@ class Budget:
             allowance = config.budget.spendable(source)
             if allowance is None:
                 self.remaining[source] = None          # unmetered
+                continue
+            # Ask the provider first. The local ledger counts by UTC calendar
+            # month, but the plan renews on its own anniversary date, so the
+            # ledger reads empty at the start of a month while the real cycle
+            # still has most of its spend booked.
+            reported = searches_left() if source == "serpapi" else None
+            if reported is not None:
+                self.remaining[source] = reported - config.budget.reserve
+                self.authoritative = True
             else:
                 self.remaining[source] = allowance - searches_used(source, now, usage_path)
 
@@ -59,12 +69,15 @@ class Budget:
         if left is not None:
             self.remaining[source] = left - used
 
+    authoritative = False
+
     def summary(self) -> str:
+        source_note = " (from the provider)" if self.authoritative else " (from the local ledger)"
         parts = [
             f"{source}={'unmetered' if left is None else left}"
             for source, left in sorted(self.remaining.items())
         ]
-        return "searches left this month: " + ", ".join(parts)
+        return "searches left this cycle" + source_note + ": " + ", ".join(parts)
 
 
 def _prices_passengers(fetcher: Fetcher) -> bool:
@@ -238,6 +251,13 @@ def run(args: argparse.Namespace) -> int:
 
     alerting.save_state(state)
     log.info("done: %s quotes this run, %s alert(s)", len(quotes), alerts_fired)
+
+    if not args.dry_run and not quotes:
+        # Silence is the dangerous failure here: the dashboard just flatlines and
+        # looks like stable prices. Exit non-zero so the workflow goes red and
+        # GitHub emails it, which needs no extra credentials.
+        log.error("no quotes collected from any source: the tracker is blind")
+        return 1
     return 0
 
 

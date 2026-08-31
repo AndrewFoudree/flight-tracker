@@ -50,6 +50,7 @@ jobs:
             ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Commit results
+        if: always()          # keep partial data even when the fetch reports failure
         run: |
           git config user.name "flight-bot"
           git config user.email "flight-bot@users.noreply.github.com"
@@ -60,6 +61,7 @@ jobs:
   # what actually keeps the published page in step with the data.
   publish:
     needs: check
+    if: always()              # a blind run still redeploys the page it has
     runs-on: ubuntu-latest
     concurrency:
       group: pages

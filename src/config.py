@@ -238,12 +238,6 @@ class Config(_Strict):
         """Human-readable warnings about lap-infant eligibility on this route."""
         config = route.passengers or self.defaults.passengers
         if not config.infant_birthdates:
-            if config.infants:
-                return [
-                    f"{route.id}: infant_birthdates is not set, so the "
-                    f"{config.infants} lap infant(s) are taken on trust. A child who "
-                    "has turned two needs a seat and is being priced as free."
-                ]
             return []
 
         notes: list[str] = []

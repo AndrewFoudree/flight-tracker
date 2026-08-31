@@ -47,6 +47,24 @@
     .v.over { color: var(--warn); }
     .chart { position: relative; height: 300px; }
     .note { color: var(--muted); font-size: .82rem; margin-top: .85rem; }
+    .pull { margin-top: 1.4rem; border-top: 1px solid var(--line); padding-top: 1.1rem; }
+    .pull h3 { font-size: .8rem; margin: 0 0 .2rem; text-transform: uppercase;
+               letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+    .pull .when { color: var(--muted); font-size: .8rem; margin: 0 0 .8rem; }
+    .scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: .87rem;
+            font-variant-numeric: tabular-nums; }
+    th, td { text-align: right; padding: .45rem .7rem; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { color: var(--muted); font-weight: 600; font-size: .72rem;
+               text-transform: uppercase; letter-spacing: .05em;
+               border-bottom: 1px solid var(--line); }
+    tbody tr + tr td { border-top: 1px solid var(--line); }
+    tbody tr.best td { background: color-mix(in srgb, var(--good) 12%, transparent); }
+    tbody tr.best td:first-child::after { content: " 90 cheapest"; color: var(--good);
+                                          font-size: .75rem; }
+    td.wide { color: var(--warn); font-weight: 600; }
+    .legend { color: var(--muted); font-size: .78rem; margin: .7rem 0 0; }
     .empty, .error { background: var(--panel); border: 1px solid var(--line);
                      border-radius: 12px; padding: 1.5rem; color: var(--muted); }
     .error { border-color: var(--warn); color: var(--warn); }

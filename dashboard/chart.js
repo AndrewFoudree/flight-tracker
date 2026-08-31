@@ -86,6 +86,102 @@ function describe(route) {
   return "";
 }
 
+/* Everything observed on the most recent day we checked. */
+function latestPull(rows, route) {
+  const mine = rows.filter((r) => r.route_id === route.id);
+  if (!mine.length) return null;
+  const day = mine.map((r) => r.observed_at.slice(0, 10)).sort().pop();
+  const todays = mine.filter((r) => r.observed_at.startsWith(day));
+
+  const isParty = (r) =>
+    Number(r.adults) === route.adults &&
+    Number(r.children) === route.children &&
+    Number(r.infants) === route.infants;
+  const isSingle = (r) =>
+    Number(r.adults) === 1 && Number(r.children) === 0 && Number(r.infants) === 0;
+
+  const byDeparture = new Map();
+  for (const row of todays) {
+    const key = row.depart_date;
+    if (!byDeparture.has(key)) {
+      byDeparture.set(key, { depart: key, return_date: row.return_date });
+    }
+    const entry = byDeparture.get(key);
+    const price = Number(row.total_price);
+    if (!Number.isFinite(price)) continue;
+    if (isParty(row) && (entry.party === undefined || price < entry.party)) {
+      entry.party = price;
+      entry.carrier = row.carrier;
+      entry.stops = row.stops === "" ? null : Number(row.stops);
+    }
+    if (isSingle(row) && (entry.single === undefined || price < entry.single)) {
+      entry.single = price;
+    }
+  }
+  const departures = [...byDeparture.values()]
+    .filter((e) => e.party !== undefined)
+    .sort((a, b) => a.depart.localeCompare(b.depart));
+  return departures.length ? { day, departures } : null;
+}
+
+function renderLatestPull(card, route, rows) {
+  const pull = latestPull(rows, route);
+  if (!pull) return;
+
+  const seats = route.adults + route.children;          // a lap infant buys no seat
+  const cheapest = Math.min(...pull.departures.map((d) => d.party));
+  let anyWide = false;
+
+  const body = pull.departures.map((d) => {
+    const split = d.single === undefined ? null : d.single * seats;
+    const spread = split === null ? null : d.party - split;
+    // A party fare well above N single fares means the cheap bucket no longer
+    // holds N seats. That leads the price, so it is the number worth watching.
+    const wide = spread !== null && spread > d.party * 0.01;
+    if (wide) anyWide = true;
+    const stops =
+      d.stops === null ? "&mdash;" : d.stops === 0 ? "nonstop" : `${d.stops} stop${d.stops > 1 ? "s" : ""}`;
+    return `<tr class="${d.party === cheapest ? "best" : ""}">
+      <td>${fmtDay(d.depart)}</td>
+      <td>${d.return_date ? fmtDay(d.return_date) : "one way"}</td>
+      <td>${money(d.party, route.currency)}</td>
+      <td>${split === null ? "&mdash;" : money(split, route.currency)}</td>
+      <td class="${wide ? "wide" : ""}">${
+        spread === null ? "&mdash;" : (spread >= 0 ? "+" : "") + money(spread, route.currency)
+      }</td>
+      <td>${d.carrier || "&mdash;"}</td>
+      <td>${stops}</td>
+    </tr>`;
+  }).join("");
+
+  const section = document.createElement("div");
+  section.className = "pull";
+  section.innerHTML = `
+    <h3>Most recent pull</h3>
+    <p class="when">Checked ${fmtDay(pull.day)} &middot; ${pull.departures.length} departure(s) priced</p>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>Depart</th><th>Return</th><th>Party fare</th>
+        <th>${seats} &times; single</th><th>Spread</th><th>Carrier</th><th>Stops</th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+    <p class="legend">${
+      anyWide
+        ? "A wide spread means the cheap fare bucket no longer holds all " + seats +
+          " seats, so the group is being priced up a tier. Cheap inventory is draining."
+        : "Spreads are near zero, so the cheap fare buckets still hold all " + seats + " seats."
+    }</p>`;
+  card.appendChild(section);
+}
+
+function fmtDay(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(undefined, {
+    weekday: "short", day: "2-digit", month: "short", timeZone: "UTC",
+  });
+}
+
 function renderRoute(container, route, rows) {
   const series = dailyMinimum(partyRows(rows, route));
   const card = document.createElement("section");
@@ -123,6 +219,8 @@ function renderRoute(container, route, rows) {
 
   const ink = getComputedStyle(document.body).getPropertyValue("--text").trim();
   const grid = getComputedStyle(document.body).getPropertyValue("--line").trim();
+
+  renderLatestPull(card, route, rows);
 
   new Chart(card.querySelector("canvas"), {
     type: "line",

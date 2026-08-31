@@ -62,6 +62,8 @@ def workspace(tmp_path, monkeypatch):
     raw = json.loads(json.dumps(BASE_CONFIG))
     (tmp_path / "config/routes.yaml").write_text(yaml.safe_dump(raw), encoding="utf-8")
     monkeypatch.setattr(main, "build_fetchers", lambda config, names: {"serpapi": StubFetcher(config)})
+    # Budget asks the provider first; keep tests on the local ledger and offline.
+    monkeypatch.setattr(main, "searches_left", lambda: None)
     monkeypatch.setattr(StubFetcher, "prices", [2745.0])
     monkeypatch.setattr(StubFetcher, "fail", False)
     return tmp_path
@@ -91,15 +93,20 @@ def test_a_second_run_appends_and_does_not_re_alert(workspace):
 
 
 def test_a_failing_source_does_not_end_the_run(workspace, monkeypatch):
+    """The run completes and persists state; it just reports non-zero so the
+    workflow goes red and GitHub emails you that the tracker has gone blind."""
     monkeypatch.setattr(StubFetcher, "fail", True)
-    assert run() == 0
+    assert run() == 1
     assert storage.read_history(storage.PRICES_PATH) == []
     assert load_state() == {}
 
 
-def test_an_exhausted_budget_skips_the_search(workspace):
+def test_an_exhausted_budget_skips_the_search_and_reports_it(workspace):
+    """Running dry is not a quiet day. Nothing is queried, nothing is written,
+    and the run reports non-zero so the failure surfaces instead of looking like
+    flat prices on the dashboard."""
     storage.append_usage("serpapi", "dsm-mco-spring", 230, utcnow())
-    assert run() == 0
+    assert run() == 1
     assert storage.read_history(storage.PRICES_PATH) == []
 
 
@@ -111,6 +118,23 @@ def test_dry_run_calls_nothing_and_writes_no_history(workspace):
 
 def test_unknown_route_filter_is_an_error(workspace):
     assert run("--route", "nope") == 2
+
+
+def test_the_provider_count_overrides_the_local_ledger(workspace, monkeypatch):
+    """The ledger counts by calendar month; the plan renews on its own date. When
+    the provider reports the truth, that wins."""
+    from src.storage import append_usage
+    append_usage("serpapi", "r", 0, utcnow())
+    monkeypatch.setattr(main, "searches_left", lambda: 3)
+    budget = main.Budget(main.load_config("config/routes.yaml"), utcnow())
+    assert budget.remaining["serpapi"] == 3 - 20        # reported minus reserve
+    assert budget.authoritative
+
+
+def test_a_blind_run_reports_failure(workspace, monkeypatch):
+    """A run that collects nothing must not look like a successful quiet day."""
+    monkeypatch.setattr(StubFetcher, "fail", True)
+    assert run() == 1
 
 
 def test_price_above_threshold_stores_but_stays_quiet(workspace, monkeypatch):
