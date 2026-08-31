@@ -51,11 +51,7 @@ jobs:
         run: |
           git config user.name "flight-bot"
           git config user.email "flight-bot@users.noreply.github.com"
-          git add data/
-          git diff --staged --quiet || git commit -m "prices: $(date -u +%Y-%m-%d)"
-          # The dashboard deploy may have pushed since checkout.
-          git pull --rebase --autostash
-          git push
+          python scripts/commit_data.py "prices: $(date -u +%Y-%m-%d)"
 
   # A push made with GITHUB_TOKEN does not trigger other workflows, so the daily
   # price commit can never fire publish-dashboard.yml. Deploying here instead is
