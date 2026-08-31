@@ -22,23 +22,22 @@ budget:
   reserve: 20            # stop before hitting zero
 
 routes:
-  # Chosen from the year survey, not guessed. $2,955 total is a hard floor for
-  # this route and party ($492 a seat); nothing in 61 sampled departures beat it.
-  # January hits that floor repeatedly, so the window tracks the whole month and
-  # reports whichever day is cheapest rather than betting on one date.
-  - id: dsm-stt-january
+  # Chosen from a full sweep of all 31 January departures at 4, 5 and 7 nights.
+  # $2,955 ($492 a seat) is a hard floor this route keeps returning to, and it is
+  # reachable at every trip length, so a shorter trip costs nothing. Several
+  # January dates tie at that floor; this one departs on a Saturday, sits in the
+  # coldest part of Iowa winter, and clears the volatile New Year window.
+  - id: dsm-stt-jan
     origin: DSM
     destination: STT   # St. Thomas, US Virgin Islands
-    depart_window:
-      earliest: "2027-01-03"   # after the New Year spike; Dec 25 hit $6,969
-      latest: "2027-01-31"
-    nights: 7
-    window_step_days: 7        # 5 departures a run, 150 searches a month
-    threshold_usd: 2800        # below the observed floor, so it means something
+    depart: "2027-01-23"       # Saturday
+    return: "2027-01-28"       # Thursday, 5 nights
+    threshold_usd: 2800        # below the observed floor, so an alert means something
     alert_on:
       - absolute_below: 2800   # a genuine break below the floor
       - lowest_in_days: 30
       - percent_drop: 5
-    # The party and single-adult probe were within $3, so the fare buckets are
-    # deep. Re-enable if the window narrows to a fixed date.
-    compare_split_booking: false
+    # A fixed date costs 1 search a run, so the single-adult probe fits again.
+    # It measures fare-bucket depth: when group total starts exceeding 6x single,
+    # the cheap seats are draining and it is time to book.
+    compare_split_booking: true
