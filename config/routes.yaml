@@ -34,17 +34,3 @@ routes:
       - percent_drop: 10         # versus previous observation
     compare_split_booking: true
 
-  - id: dsm-den-flex
-    origin: DSM
-    destination: DEN
-    depart_window:
-      earliest: "2027-06-01"
-      latest: "2027-06-30"
-    nights: 7
-    threshold_usd: 1900
-    alert_on:
-      - lowest_in_days: 45
-    # Travelpayouts has no cached fares for DSM-DEN this far out, so this route
-    # needs SerpAPI. A 10-day step prices Jun 1, 11, 21 and 30: four searches a
-    # run, 120 a month, which fits alongside the STT route inside the 230 cap.
-    window_step_days: 10

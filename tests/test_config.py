@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from src.config import Config, load_config
-from tests.conftest import BASE_CONFIG, make_config
+from tests.conftest import BASE_CONFIG, make_config, make_window_config
 
 
 def mutate(**route_changes) -> dict:
@@ -20,7 +20,7 @@ def mutate(**route_changes) -> dict:
 
 def test_shipped_config_is_valid():
     config = load_config("config/routes.yaml")
-    assert [r.id for r in config.routes] == ["dsm-stt-spring", "dsm-den-flex"]
+    assert [r.id for r in config.routes] == ["dsm-stt-spring"]
 
 
 def test_defaults_resolve_per_route():
@@ -107,7 +107,7 @@ def test_fixed_route_yields_one_search_date():
 
 
 def test_window_expands_and_always_includes_the_far_edge():
-    config = load_config("config/routes.yaml")
+    config = make_window_config()
     pairs = config.search_dates_for(config.route_by_id("dsm-den-flex"))
     departures = [d for d, _ in pairs]
     assert departures[0] == date(2027, 6, 1)

@@ -38,12 +38,43 @@ BASE_CONFIG = {
 }
 
 
+# A flexible-date route, kept here rather than read from config/routes.yaml so
+# the suite does not break every time the live config changes.
+WINDOW_CONFIG = {
+    "defaults": {
+        "passengers": {"adults": 2, "children": 4, "infants": 1},
+        "currency": "USD",
+        "cabin": "economy",
+        "sources": ["serpapi", "travelpayouts"],
+        "window_step_days": 7,
+    },
+    "budget": {"serpapi_monthly_searches": 250, "reserve": 20},
+    "routes": [
+        {
+            "id": "dsm-den-flex",
+            "origin": "DSM",
+            "destination": "DEN",
+            "depart_window": {"earliest": "2027-06-01", "latest": "2027-06-30"},
+            "nights": 7,
+            "threshold_usd": 1900,
+            "alert_on": [{"lowest_in_days": 45}],
+        }
+    ],
+}
+
+
 def load_fixture(name: str) -> dict:
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
 def make_config(**overrides) -> Config:
     raw = json.loads(json.dumps(BASE_CONFIG))
+    raw.update(overrides)
+    return Config.model_validate(raw)
+
+
+def make_window_config(**overrides) -> Config:
+    raw = json.loads(json.dumps(WINDOW_CONFIG))
     raw.update(overrides)
     return Config.model_validate(raw)
 

@@ -9,20 +9,20 @@ from datetime import date
 
 import pytest
 
-from src.config import load_config
 from src.fetchers.base import FetcherError
 from src.fetchers.registry import build_fetchers
 from src.fetchers.serpapi import SerpApiFetcher
 from src.fetchers.travelpayouts import TravelpayoutsFetcher
 from src.models import Passengers
-from tests.conftest import FakeSession, load_fixture, make_config
+from tests.conftest import FakeSession, load_fixture, make_config, make_window_config
 
 PARTY = Passengers(2, 4, 1)
 
 
 @pytest.fixture
-def shipped():
-    return load_config("config/routes.yaml")
+def windowed():
+    """A flexible-date route, which is what the Travelpayouts month query needs."""
+    return make_window_config()
 
 
 # --- SerpAPI ------------------------------------------------------------
@@ -124,58 +124,58 @@ def test_serpapi_missing_key_is_an_error_not_a_silent_skip():
 # --- Travelpayouts ------------------------------------------------------
 
 
-def test_travelpayouts_quotes_one_adult_never_a_fabricated_party_total(shipped):
+def test_travelpayouts_quotes_one_adult_never_a_fabricated_party_total(windowed):
     """The v3 prices API takes no passenger parameters. Multiplying its fare by
     seven is exactly the fare-bucket error, so it must not claim a party total."""
     session = FakeSession(load_fixture("travelpayouts_dsm_den.json"))
-    fetcher = TravelpayoutsFetcher(shipped, token="t", session=session)
-    quotes = fetcher.search(shipped.route_by_id("dsm-den-flex"), PARTY)
+    fetcher = TravelpayoutsFetcher(windowed, token="t", session=session)
+    quotes = fetcher.search(windowed.route_by_id("dsm-den-flex"), PARTY)
     assert quotes
     assert all((q.adults, q.children, q.infants) == (1, 0, 0) for q in quotes)
     assert all(q.price_per_adult == q.total_price for q in quotes)
 
 
-def test_travelpayouts_filters_to_the_window_and_the_requested_nights(shipped):
+def test_travelpayouts_filters_to_the_window_and_the_requested_nights(windowed):
     session = FakeSession(load_fixture("travelpayouts_dsm_den.json"))
-    fetcher = TravelpayoutsFetcher(shipped, token="t", session=session)
-    quotes = fetcher.search(shipped.route_by_id("dsm-den-flex"), PARTY)
+    fetcher = TravelpayoutsFetcher(windowed, token="t", session=session)
+    quotes = fetcher.search(windowed.route_by_id("dsm-den-flex"), PARTY)
     prices = sorted(q.total_price for q in quotes)
     assert prices == [214.0, 268.0]        # July fare and the 3-night fare are dropped
     assert all(q.depart_date.month == 6 for q in quotes)
     assert all((q.return_date - q.depart_date).days == 7 for q in quotes)
 
 
-def test_travelpayouts_builds_an_absolute_booking_url(shipped):
+def test_travelpayouts_builds_an_absolute_booking_url(windowed):
     session = FakeSession(load_fixture("travelpayouts_dsm_den.json"))
-    fetcher = TravelpayoutsFetcher(shipped, token="t", session=session)
-    quote = min(fetcher.search(shipped.route_by_id("dsm-den-flex"), PARTY),
+    fetcher = TravelpayoutsFetcher(windowed, token="t", session=session)
+    quote = min(fetcher.search(windowed.route_by_id("dsm-den-flex"), PARTY),
                 key=lambda q: q.total_price)
     assert quote.booking_url.startswith("https://www.aviasales.com/search/")
 
 
-def test_travelpayouts_costs_one_call_per_month_of_the_window(shipped):
-    route = shipped.route_by_id("dsm-den-flex")
-    fetcher = TravelpayoutsFetcher(shipped, token="t", session=FakeSession({"success": True, "data": []}))
+def test_travelpayouts_costs_one_call_per_month_of_the_window(windowed):
+    route = windowed.route_by_id("dsm-den-flex")
+    fetcher = TravelpayoutsFetcher(windowed, token="t", session=FakeSession({"success": True, "data": []}))
     assert fetcher.estimate_searches(route) == 1        # June only
     fetcher.search(route, PARTY)
     assert fetcher.searches_consumed() == 1
 
 
-def test_travelpayouts_rejects_an_unsuccessful_response(shipped):
+def test_travelpayouts_rejects_an_unsuccessful_response(windowed):
     session = FakeSession({"success": False, "error": "bad token"})
-    fetcher = TravelpayoutsFetcher(shipped, token="t", session=session)
+    fetcher = TravelpayoutsFetcher(windowed, token="t", session=session)
     with pytest.raises(FetcherError, match="bad token"):
-        fetcher.search(shipped.route_by_id("dsm-den-flex"), PARTY)
+        fetcher.search(windowed.route_by_id("dsm-den-flex"), PARTY)
 
 
 # --- registry -----------------------------------------------------------
 
 
-def test_registry_builds_known_sources(shipped):
-    built = build_fetchers(shipped, ["serpapi", "travelpayouts"])
+def test_registry_builds_known_sources(windowed):
+    built = build_fetchers(windowed, ["serpapi", "travelpayouts"])
     assert sorted(built) == ["serpapi", "travelpayouts"]
 
 
-def test_registry_rejects_an_unknown_source(shipped):
+def test_registry_rejects_an_unknown_source(windowed):
     with pytest.raises(KeyError, match="amadeus"):
-        build_fetchers(shipped, ["amadeus"])
+        build_fetchers(windowed, ["amadeus"])
