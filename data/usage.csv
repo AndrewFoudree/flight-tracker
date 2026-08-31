@@ -4,3 +4,5 @@ observed_at,source,route_id,searches
 2026-08-31T16:52:16Z,travelpayouts,dsm-den-flex,1
 2026-08-31T16:56:47Z,travelpayouts,dsm-den-flex,1
 2026-08-31T16:59:03Z,travelpayouts,dsm-den-flex,1
+2026-08-31T17:00:42Z,serpapi,dsm-den-flex,4
+2026-08-31T17:00:42Z,travelpayouts,dsm-den-flex,1
