@@ -18,18 +18,26 @@ def route_rows(
     route_id: str,
     passengers: Passengers | None = None,
     source: str | None = None,
+    itineraries: set[tuple[date, date | None]] | None = None,
 ) -> list[PriceRow]:
     """Rows for one route, oldest first.
 
     Passing `passengers` keeps whole-party quotes only. That matters: the
     single-adult split-booking probes sit in the same file at a fraction of the
     price, and would otherwise win every "lowest ever" comparison.
+
+    Passing `itineraries` keeps only rows for the dates the route currently
+    searches. Route ids get reused when travel plans change, and comparing a
+    January trip against the March trip that once held the same id would make
+    every trend meaningless.
     """
     selected = [r for r in rows if r.route_id == route_id]
     if passengers is not None:
         selected = [r for r in selected if r.is_group(passengers)]
     if source is not None:
         selected = [r for r in selected if r.source == source]
+    if itineraries is not None:
+        selected = [r for r in selected if (r.depart_date, r.return_date) in itineraries]
     return sorted(selected, key=lambda r: r.observed_at)
 
 

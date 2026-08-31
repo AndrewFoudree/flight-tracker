@@ -205,7 +205,10 @@ def run(args: argparse.Namespace) -> int:
 
     for route in routes:
         passengers = config.passengers_for(route)
-        route_history = analysis.route_rows(history, route.id, passengers=passengers)
+        route_history = analysis.route_rows(
+            history, route.id, passengers=passengers,
+            itineraries=set(config.search_dates_for(route)),
+        )
         quote = best_group_quote(quotes, route.id, passengers)
         if quote is None:
             log.info("%s: no whole-party quote this run", route.id)

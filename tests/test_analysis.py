@@ -130,3 +130,28 @@ def test_an_international_lap_infant_adds_a_percentage_of_one_fare():
 def test_within_days_excludes_the_future():
     rows = [price_row(-1, 2500), price_row(1, 2800)]
     assert [r.total_price for r in analysis.within_days(rows, 30, NOW)] == [2800]
+
+
+def test_history_is_scoped_to_the_itinerary_the_route_now_searches():
+    """Route ids get reused when travel plans change. A January trip must not be
+    compared against the March trip that once carried the same id."""
+    from datetime import date
+    january = price_row(1, 2955)
+    march = price_row(2, 3327)
+    object.__setattr__(january, "depart_date", date(2027, 1, 7))
+    object.__setattr__(january, "return_date", date(2027, 1, 12))
+    rows = [january, march]
+
+    scoped = analysis.route_rows(
+        rows, "dsm-mco-spring", itineraries={(date(2027, 1, 7), date(2027, 1, 12))}
+    )
+    assert [r.total_price for r in scoped] == [2955]
+
+    assert len(analysis.route_rows(rows, "dsm-mco-spring")) == 2   # unscoped is unchanged
+
+
+def test_a_windowed_route_keeps_every_departure_it_prices():
+    from datetime import date
+    pairs = {(date(2027, 3, 14), date(2027, 3, 21))}
+    rows = [price_row(1, 2955), price_row(2, 3100)]
+    assert len(analysis.route_rows(rows, "dsm-mco-spring", itineraries=pairs)) == 2

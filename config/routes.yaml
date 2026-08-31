@@ -26,7 +26,7 @@ routes:
   # $2,955 ($492 a seat) is a hard floor this route keeps returning to, reachable
   # at every trip length tested, so trip length costs nothing. Many January dates
   # tie at it; this one is weekday to weekday and sits entirely inside January.
-  - id: dsm-stt-jan
+  - id: dsm-stt-jan07
     origin: DSM
     destination: STT   # St. Thomas, US Virgin Islands
     depart: "2027-01-07"       # Thursday
