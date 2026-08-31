@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "currency": "USD",
+  "data": [
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "origin_airport": "DSM",
+      "destination_airport": "DEN",
+      "price": 214,
+      "airline": "UA",
+      "flight_number": 2455,
+      "departure_at": "2027-06-08T07:30:00-05:00",
+      "return_at": "2027-06-15T18:05:00-06:00",
+      "transfers": 0,
+      "return_transfers": 0,
+      "duration": 155,
+      "link": "/search/DSM0806DEN1?t=recorded"
+    },
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "price": 268,
+      "airline": "F9",
+      "flight_number": 1180,
+      "departure_at": "2027-06-15T11:00:00-05:00",
+      "return_at": "2027-06-22T20:40:00-06:00",
+      "transfers": 1,
+      "return_transfers": 0,
+      "duration": 310,
+      "link": "/search/DSM1506DEN1?t=recorded"
+    },
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "price": 189,
+      "airline": "UA",
+      "flight_number": 2455,
+      "departure_at": "2027-07-06T07:30:00-05:00",
+      "return_at": "2027-07-13T18:05:00-06:00",
+      "transfers": 0,
+      "return_transfers": 0,
+      "duration": 155,
+      "link": "/search/DSM0607DEN1?t=out-of-window"
+    },
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "price": 175,
+      "airline": "WN",
+      "flight_number": 900,
+      "departure_at": "2027-06-10T09:00:00-05:00",
+      "return_at": "2027-06-13T19:00:00-06:00",
+      "transfers": 0,
+      "return_transfers": 0,
+      "duration": 150,
+      "link": "/search/DSM1006DEN1?t=wrong-nights"
+    }
+  ]
+}

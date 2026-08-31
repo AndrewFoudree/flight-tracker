@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flight price tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1216;
+      --panel: #171b21;
+      --line: #262c35;
+      --text: #e6e9ee;
+      --muted: #96a0ad;
+      --accent: #5aa9e6;
+      --good: #58c98a;
+      --warn: #e6a34a;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f7f9; --panel: #ffffff; --line: #e2e6eb;
+        --text: #131820; --muted: #5c6875;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 2rem 1.25rem 4rem;
+      background: var(--bg); color: var(--text);
+      font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1080px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
+    .sub { color: var(--muted); margin: 0 0 2rem; font-size: .9rem; }
+    .route { background: var(--panel); border: 1px solid var(--line);
+             border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .route header { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem;
+                    align-items: baseline; margin-bottom: 1rem; }
+    .route h2 { font-size: 1.05rem; margin: 0; }
+    .route h2 small { color: var(--muted); font-weight: 400; margin-left: .5rem; }
+    .stats { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-left: auto; }
+    .stat { text-align: right; }
+    .stat .k { display: block; color: var(--muted); font-size: .72rem;
+               text-transform: uppercase; letter-spacing: .06em; }
+    .stat .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .v.under { color: var(--good); }
+    .v.over { color: var(--warn); }
+    .chart { position: relative; height: 300px; }
+    .note { color: var(--muted); font-size: .82rem; margin-top: .85rem; }
+    .empty, .error { background: var(--panel); border: 1px solid var(--line);
+                     border-radius: 12px; padding: 1.5rem; color: var(--muted); }
+    .error { border-color: var(--warn); color: var(--warn); }
+    code { background: rgba(127,127,127,.15); padding: .1em .35em; border-radius: 4px; }
+    footer { color: var(--muted); font-size: .8rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Flight price tracker</h1>
+    <p class="sub" id="subtitle">Loading history&hellip;</p>
+    <div id="routes"></div>
+    <footer>
+      Prices are whole-party totals unless noted. Every point is the cheapest quote
+      observed that day. Fares move; verify on the airline site before booking.
+    </footer>
+  </main>
+  <script src="chart.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+defaults:
+  passengers:
+    adults: 2
+    children: 4          # ages 2 to 11
+    infants: 1           # under 2, lap infant
+  currency: USD
+  cabin: economy
+  sources: [serpapi, travelpayouts]
+  # Flexible-date routes are expanded into one search per step through the
+  # window. Raising this number lowers SerpAPI cost per run.
+  window_step_days: 7
+
+budget:
+  serpapi_monthly_searches: 250
+  reserve: 20            # stop before hitting zero
+
+routes:
+  - id: dsm-mco-spring
+    origin: DSM
+    destination: MCO
+    depart: "2027-03-14"
+    return: "2027-03-21"
+    threshold_usd: 2800          # total for the party
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 10         # versus previous observation
+    compare_split_booking: true
+
+  - id: dsm-den-flex
+    origin: DSM
+    destination: DEN
+    depart_window:
+      earliest: "2027-06-01"
+      latest: "2027-06-30"
+    nights: 7
+    threshold_usd: 1900
+    alert_on:
+      - lowest_in_days: 45
+    # A 30-day window at a 7-day step is 5 SerpAPI searches per run, which is
+    # most of the daily allowance. Travelpayouts covers windows for free.
+    sources: [travelpayouts]

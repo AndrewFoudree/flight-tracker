@@ -1,0 +1,56 @@
+name: Check flight prices
+
+on:
+  schedule:
+    - cron: "0 13 * * *"   # 13:00 UTC, roughly 08:00 Central
+  workflow_dispatch:        # manual trigger for testing
+    inputs:
+      route:
+        description: "Limit to one route id (blank runs all)"
+        required: false
+      dry_run:
+        description: "Analyse stored history without calling any API"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write           # commit the CSV
+  issues: write             # open alert issues
+
+# Two runs writing data/ at once would fight over the push.
+concurrency:
+  group: prices
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch and analyse
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m src.main \
+            ${{ inputs.route && format('--route {0}', inputs.route) || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Commit results
+        run: |
+          git config user.name "flight-bot"
+          git config user.email "flight-bot@users.noreply.github.com"
+          git add data/
+          git diff --staged --quiet || git commit -m "prices: $(date -u +%Y-%m-%d)"
+          # The dashboard deploy may have pushed since checkout.
+          git pull --rebase --autostash
+          git push

@@ -1,0 +1,39 @@
+{
+  "search_metadata": {
+    "id": "recorded-fixture-single",
+    "status": "Success",
+    "google_flights_url": "https://www.google.com/travel/flights?tfs=recorded-single"
+  },
+  "search_parameters": {
+    "engine": "google_flights",
+    "departure_id": "DSM",
+    "arrival_id": "MCO",
+    "outbound_date": "2027-03-14",
+    "return_date": "2027-03-21",
+    "currency": "USD",
+    "adults": 1,
+    "children": 0,
+    "infants_on_lap": 0,
+    "travel_class": 1,
+    "type": 1
+  },
+  "best_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": {"id": "DSM", "time": "2027-03-14 06:00"},
+          "arrival_airport": {"id": "ATL", "time": "2027-03-14 09:20"},
+          "airline": "Delta",
+          "flight_number": "DL 1422",
+          "travel_class": "Economy"
+        }
+      ],
+      "layovers": [{"duration": 85, "name": "Hartsfield-Jackson", "id": "ATL"}],
+      "total_duration": 380,
+      "price": 348,
+      "type": "Round trip",
+      "booking_token": "recorded-token-single"
+    }
+  ],
+  "other_flights": []
+}

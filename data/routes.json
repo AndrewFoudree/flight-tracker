@@ -1,0 +1,34 @@
+[
+  {
+    "id": "dsm-mco-spring",
+    "origin": "DSM",
+    "destination": "MCO",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": "2027-03-14",
+    "return": "2027-03-21",
+    "window": null
+  },
+  {
+    "id": "dsm-den-flex",
+    "origin": "DSM",
+    "destination": "DEN",
+    "threshold_usd": 1900.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-06-01",
+      "latest": "2027-06-30",
+      "nights": 7
+    }
+  }
+]
