@@ -134,8 +134,25 @@ at $200 and five at $300, the group search quotes 7 x $300. Booking individually
 capture the cheaper seats.
 
 With `compare_split_booking: true` the tracker runs a second single-adult query and
-stores both. `group_total` versus `single_price x party_size` is an approximation,
-not a quote. It flags routes worth checking by hand.
+stores both, then compares the party fare against booking each traveller
+separately.
+
+The comparison counts **seats, not people**. Your party of seven occupies six
+seats, because the lap infant does not buy one. Multiplying a single fare by the
+head count would invent a fare nobody pays and hide a real saving:
+
+```
+2 adults + 4 children + 1 lap infant, single fare $348
+
+seats  (correct)   6 x 348 = $2,088   ->  $712 below a $2,800 party fare
+people (wrong)     7 x 348 = $2,436   ->  $364, understating the saving by half
+```
+
+On international routes a lap infant is typically around 10% of the adult fare
+plus taxes. Set `infant_fare_pct: 10` under `defaults`, or on the route, and the
+estimate adds it. It defaults to `0`, which is correct for domestic US flights.
+
+This is an approximation, not a quote. It flags routes worth checking by hand.
 
 **Caveats, for future-you:**
 

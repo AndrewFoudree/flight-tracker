@@ -125,7 +125,9 @@ def best_group_quote(quotes: list[Quote], route_id: str, passengers: Passengers)
     return min(candidates, key=lambda q: q.total_price, default=None)
 
 
-def report_split_booking(quotes: list[Quote], route: Route, passengers: Passengers) -> None:
+def report_split_booking(
+    quotes: list[Quote], route: Route, passengers: Passengers, infant_fare_pct: float = 0.0
+) -> None:
     group = best_group_quote(quotes, route.id, passengers)
     singles = [
         q for q in quotes
@@ -135,7 +137,17 @@ def report_split_booking(quotes: list[Quote], route: Route, passengers: Passenge
         return
     cheapest_single = min(singles, key=lambda q: q.total_price)
     delta = analysis.split_booking_delta(
-        group.total_price, cheapest_single.total_price, passengers.party_size
+        group.total_price,
+        cheapest_single.total_price,
+        seats=passengers.seated,
+        infants=passengers.infants,
+        infant_fare_pct=infant_fare_pct,
+    )
+    log.info(
+        "%s: party fare %s %.0f vs %s separate fares at %s %.0f = %s %.0f",
+        route.id, group.currency, group.total_price, passengers.seated,
+        group.currency, cheapest_single.total_price,
+        group.currency, delta["estimated_split_total"],
     )
     if delta["delta"] > 0:
         log.info(
@@ -196,7 +208,7 @@ def run(args: argparse.Namespace) -> int:
             log.info("%s: no whole-party quote this run", route.id)
             continue
 
-        report_split_booking(quotes, route, passengers)
+        report_split_booking(quotes, route, passengers, config.infant_fare_pct_for(route))
         moving = analysis.trend(route_history, now)
         log.info(
             "%s: %s %.0f (7d avg %s, 30d avg %s)",

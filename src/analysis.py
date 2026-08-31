@@ -103,17 +103,30 @@ def trend(rows: list[PriceRow], now: datetime) -> dict[str, float | None]:
 
 
 def split_booking_delta(
-    group_total: float, single_price: float, party_size: int
+    group_total: float,
+    single_price: float,
+    seats: int,
+    infants: int = 0,
+    infant_fare_pct: float = 0.0,
 ) -> dict[str, float]:
-    """Compare one booking for the party against `party_size` separate bookings.
+    """Compare one booking for the party against booking each traveller separately.
+
+    Counts *seats*, not people: a lap infant does not buy one. Multiplying a
+    single fare by the head count would invent a fare that nobody pays and hide
+    a real saving. `infant_fare_pct` covers international routes, where a lap
+    infant is typically about 10% of the adult fare plus taxes; it defaults to 0
+    because domestic US lap infants travel free.
 
     An approximation, not a quote: it flags routes worth checking by hand. See
     the split-booking caveats in the README before acting on it.
     """
-    estimated = single_price * party_size
+    infant_cost = single_price * infants * (infant_fare_pct / 100.0)
+    estimated = single_price * seats + infant_cost
     return {
         "group_total": group_total,
         "estimated_split_total": estimated,
+        "seats": float(seats),
+        "infant_cost": infant_cost,
         "delta": group_total - estimated,
         "percent_cheaper_split": (
             (group_total - estimated) / group_total * 100.0 if group_total > 0 else 0.0

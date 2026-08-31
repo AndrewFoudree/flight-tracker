@@ -97,15 +97,34 @@ def test_trend_reports_both_windows():
 
 
 def test_split_booking_delta_flags_a_cheaper_split():
-    delta = analysis.split_booking_delta(group_total=2800.0, single_price=348.0, party_size=7)
-    assert delta["estimated_split_total"] == 2436.0
-    assert delta["delta"] == 364.0
-    assert round(delta["percent_cheaper_split"], 1) == 13.0
+    delta = analysis.split_booking_delta(group_total=2800.0, single_price=348.0, seats=6)
+    assert delta["estimated_split_total"] == 2088.0
+    assert delta["delta"] == 712.0
+    assert round(delta["percent_cheaper_split"], 1) == 25.4
 
 
 def test_split_booking_delta_is_negative_when_the_group_fare_wins():
-    delta = analysis.split_booking_delta(group_total=2400.0, single_price=400.0, party_size=7)
+    delta = analysis.split_booking_delta(group_total=2400.0, single_price=450.0, seats=6)
     assert delta["delta"] < 0
+
+
+def test_a_lap_infant_is_free_on_a_domestic_route():
+    """Seven travellers, six seats. Charging the infant a seventh fare would
+    invent 348 dollars nobody pays and hide a real saving."""
+    domestic = analysis.split_booking_delta(2800.0, 348.0, seats=6, infants=1)
+    head_count = analysis.split_booking_delta(2800.0, 348.0, seats=7, infants=0)
+    assert domestic["infant_cost"] == 0.0
+    assert domestic["estimated_split_total"] == 2088.0
+    assert head_count["estimated_split_total"] == 2436.0
+    assert domestic["delta"] > head_count["delta"]
+
+
+def test_an_international_lap_infant_adds_a_percentage_of_one_fare():
+    delta = analysis.split_booking_delta(
+        2800.0, 348.0, seats=6, infants=1, infant_fare_pct=10
+    )
+    assert round(delta["infant_cost"], 2) == 34.80
+    assert round(delta["estimated_split_total"], 2) == 2122.80
 
 
 def test_within_days_excludes_the_future():

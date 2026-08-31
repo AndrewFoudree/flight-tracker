@@ -66,6 +66,9 @@ class Defaults(_Strict):
     cabin: Literal["economy", "premium_economy", "business", "first"] = "economy"
     sources: list[str] = Field(min_length=1)
     window_step_days: int = Field(default=7, ge=1, le=30)
+    # A lap infant is free on domestic US routes and typically ~10% of the adult
+    # fare plus taxes internationally. Used only by the split-booking estimate.
+    infant_fare_pct: float = Field(default=0.0, ge=0, le=100)
 
 
 class DepartWindow(_Strict):
@@ -123,6 +126,7 @@ class Route(_Strict):
     cabin: str | None = None
     sources: list[str] | None = Field(default=None, min_length=1)
     window_step_days: int | None = Field(default=None, ge=1, le=30)
+    infant_fare_pct: float | None = Field(default=None, ge=0, le=100)
 
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
 
@@ -189,6 +193,13 @@ class Config(_Strict):
 
     def cabin_for(self, route: Route) -> str:
         return route.cabin or self.defaults.cabin
+
+    def infant_fare_pct_for(self, route: Route) -> float:
+        return (
+            route.infant_fare_pct
+            if route.infant_fare_pct is not None
+            else self.defaults.infant_fare_pct
+        )
 
     def sources_for(self, route: Route) -> list[str]:
         return list(route.sources or self.defaults.sources)

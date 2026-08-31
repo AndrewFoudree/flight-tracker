@@ -9,6 +9,9 @@ defaults:
   # Flexible-date routes are expanded into one search per step through the
   # window. Raising this number lowers SerpAPI cost per run.
   window_step_days: 7
+  # Lap-infant share of an adult fare, used only by the split-booking estimate.
+  # 0 is correct for domestic US; international is typically around 10.
+  infant_fare_pct: 0
 
 budget:
   serpapi_monthly_searches: 250
