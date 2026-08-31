@@ -2,12 +2,10 @@ name: Check flight prices
 
 on:
   schedule:
-    # TEMPORARY, until the SerpAPI plan renews on 30 Sep 2026. Setting this
-    # tracker up spent 200 of the 250-search cycle, leaving ~30 usable. Four
-    # January departures x party + single-adult probe is 8 searches a run, so
-    # three runs is what fits. Restore "0 13 */2 * *" (every other day, ~120 a
-    # month) once the cycle resets.
-    - cron: "0 13 1,11,21 * *"   # 13:00 UTC, roughly 08:00 Central
+    # Every other day: ~120 searches a month against a 250 plan. When the cycle
+    # runs short the run records NA rather than skipping silently, so a blind
+    # stretch shows on the dashboard as a gap instead of looking like flat prices.
+    - cron: "0 13 */2 * *"   # 13:00 UTC, roughly 08:00 Central
   workflow_dispatch:        # manual trigger for testing
     inputs:
       route:

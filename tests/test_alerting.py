@@ -135,3 +135,20 @@ def test_evaluate_reports_why_it_stayed_quiet():
     route = route_with([{"absolute_below": 2800}])
     alert, why = alerting.evaluate(route, quote(3000), [], {}, NOW)
     assert alert is None and why == "no trigger condition met"
+
+
+def test_percent_drop_ignores_a_stale_previous_observation():
+    """After a blind stretch the previous observation can be weeks old. A 5% rule
+    meant to catch a two-day move must not fire on three weeks of drift."""
+    route = route_with([{"percent_drop": 10}])
+    fresh = [price_row(1, 3000)]
+    stale = [price_row(21, 3000)]
+    assert alerting.triggered_reasons(route, 2700, fresh, NOW)
+    assert not alerting.triggered_reasons(route, 2700, stale, NOW)
+
+
+def test_a_gap_does_not_affect_the_other_rules():
+    """Only percent_drop is interval-sensitive; absolute and rolling-low are not."""
+    route = route_with([{"absolute_below": 2800}, {"lowest_in_days": 30}])
+    stale = [price_row(21, 3000)]
+    assert len(alerting.triggered_reasons(route, 2700, stale, NOW)) == 2

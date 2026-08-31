@@ -18,6 +18,7 @@ from .models import Passengers, Quote
 PRICES_PATH = Path("data/prices.csv")
 USAGE_PATH = Path("data/usage.csv")
 ROUTES_META_PATH = Path("data/routes.json")
+RUNS_PATH = Path("data/runs.csv")
 
 PRICE_COLUMNS: Sequence[str] = (
     "observed_at",
@@ -40,6 +41,12 @@ PRICE_COLUMNS: Sequence[str] = (
 # API-search accounting lives beside the price history rather than inside it,
 # so prices.csv keeps exactly the columns the schema promises.
 USAGE_COLUMNS: Sequence[str] = ("observed_at", "source", "route_id", "searches")
+
+# One row per route per run, recording whether a price was actually obtained.
+# Kept out of prices.csv on purpose: a null price there would break parsing and
+# could leak into the rolling minimum. Here it is an explicit "no data" marker
+# the dashboard can draw as a gap.
+RUN_COLUMNS: Sequence[str] = ("observed_at", "route_id", "status", "quotes", "note")
 
 
 @dataclass(frozen=True)
@@ -237,3 +244,23 @@ def write_route_metadata(config, path: Path = ROUTES_META_PATH) -> None:
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2) + chr(10), encoding="utf-8")
+
+
+def append_run(
+    route_id: str, status: str, quotes: int, note: str, observed_at: datetime,
+    path: Path = RUNS_PATH,
+) -> int:
+    """Record the outcome of one route in one run. `status` is ok or a reason."""
+    return _append(
+        path,
+        RUN_COLUMNS,
+        [
+            {
+                "observed_at": fmt_dt(observed_at),
+                "route_id": route_id,
+                "status": status,
+                "quotes": str(quotes),
+                "note": note,
+            }
+        ],
+    )

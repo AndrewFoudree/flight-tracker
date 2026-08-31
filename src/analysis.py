@@ -67,9 +67,23 @@ def is_lowest_in_days(price: float, history: list[PriceRow], days: int, now: dat
     return prior is not None and price < prior
 
 
-def previous_observation(history: list[PriceRow], now: datetime) -> PriceRow | None:
+def previous_observation(
+    history: list[PriceRow], now: datetime, max_age_days: int | None = None
+) -> PriceRow | None:
+    """The most recent observation before `now`.
+
+    `max_age_days` guards the percent-drop rule across a blind stretch. After a
+    gap, "the previous observation" can be weeks old, and a 5% rule meant to
+    catch a two-day move would instead fire on three weeks of drift. Too old and
+    there is no meaningful comparison to make.
+    """
     prior = before(history, now)
-    return prior[-1] if prior else None
+    if not prior:
+        return None
+    latest = prior[-1]
+    if max_age_days is not None and (now - latest.observed_at) > timedelta(days=max_age_days):
+        return None
+    return latest
 
 
 def percent_change(current: float, previous: float | None) -> float | None:

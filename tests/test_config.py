@@ -40,8 +40,11 @@ def runs_per_month(workflow: str = ".github/workflows/check-prices.yml") -> int:
 
 
 def test_shipped_config_is_valid():
-    """The live config must parse. Route ids change with travel plans, so this
-    asserts validity and budget fit rather than pinning specific routes."""
+    """The live config must parse and fit a full billing cycle.
+
+    A depleted cycle is handled at runtime by recording NA, so this checks the
+    steady state: a schedule that cannot fit even a fresh allowance is a config
+    error, not a temporary shortage."""
     config = load_config("config/routes.yaml")
     assert config.routes
     per_run = sum(

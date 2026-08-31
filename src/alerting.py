@@ -19,6 +19,9 @@ from .storage import PriceRow, fmt_dt, parse_dt
 STATE_PATH = Path("data/alert_state.json")
 
 DEFAULT_COOLDOWN_DAYS = 7
+# percent_drop compares against the previous observation. Across a blind stretch
+# that observation can be weeks old, which is not the comparison the rule means.
+PREVIOUS_MAX_AGE_DAYS = 7
 # An alert already sent is repeated early only if the fare falls this much further.
 FURTHER_DROP_PCT = 5.0
 
@@ -67,7 +70,7 @@ def triggered_reasons(
 ) -> list[str]:
     """Which of the route's alert_on conditions the current price satisfies."""
     reasons: list[str] = []
-    previous = analysis.previous_observation(history, now)
+    previous = analysis.previous_observation(history, now, max_age_days=PREVIOUS_MAX_AGE_DAYS)
     previous_price = previous.total_price if previous else None
 
     for rule in route.alert_on:

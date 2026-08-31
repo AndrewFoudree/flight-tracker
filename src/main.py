@@ -27,6 +27,7 @@ from .storage import (
     PriceRow,
     append_quotes,
     append_usage,
+    append_run,
     read_history,
     searches_used,
     write_route_metadata,
@@ -87,7 +88,7 @@ def _prices_passengers(fetcher: Fetcher) -> bool:
 
 def collect(
     config: Config, budget: Budget, routes: list[Route]
-) -> tuple[list[Quote], dict[str, dict[str, int]]]:
+) -> tuple[list[Quote], dict[str, dict[str, int]], set[str]]:
     """Fan out across every configured source.
 
     One source failing must not kill the run, so each fetcher is caught
@@ -95,6 +96,7 @@ def collect(
     """
     quotes: list[Quote] = []
     usage: dict[str, dict[str, int]] = {}
+    starved: set[str] = set()          # routes that lost a search to the budget
 
     for route in routes:
         passengers = config.passengers_for(route)
@@ -109,6 +111,7 @@ def collect(
             for party, label in searches:
                 cost = fetcher.estimate_searches(route)
                 if not budget.can_afford(source, cost):
+                    starved.add(route.id)
                     log.warning(
                         "%s/%s: skipping %s, needs %s searches and the monthly budget is spent",
                         route.id, source, label, cost,
@@ -129,7 +132,7 @@ def collect(
                     route.id, source, label, len(found), spent,
                 )
                 quotes.extend(found)
-    return quotes, usage
+    return quotes, usage, starved
 
 
 def best_group_quote(quotes: list[Quote], route_id: str, passengers: Passengers) -> Quote | None:
@@ -194,6 +197,7 @@ def run(args: argparse.Namespace) -> int:
     log.info("loaded %s historical rows from %s", len(history), prices_path)
 
     quotes: list[Quote] = []
+    starved: set[str] = set()
     # Built even for a dry run: reading the provider's remaining balance is free
     # and does not count against the plan, so checking the budget should never
     # cost a search.
@@ -203,7 +207,7 @@ def run(args: argparse.Namespace) -> int:
     if args.dry_run:
         log.info("dry run: no API calls, analysing stored history only")
     else:
-        quotes, usage = collect(config, budget, routes)
+        quotes, usage, starved = collect(config, budget, routes)
         origins = {r.id: r.origin for r in config.routes}
         destinations = {r.id: r.destination for r in config.routes}
         written = append_quotes(quotes, origins, destinations, prices_path)
@@ -228,8 +232,20 @@ def run(args: argparse.Namespace) -> int:
         )
         quote = best_group_quote(quotes, route.id, passengers)
         if quote is None:
-            log.info("%s: no whole-party quote this run", route.id)
+            if not args.dry_run:
+                status = "budget_exhausted" if route.id in starved else "no_data"
+                note = (
+                    "SerpAPI cycle allowance spent"
+                    if route.id in starved
+                    else "no source returned a whole-party quote"
+                )
+                append_run(route.id, status, 0, note, now)
+                log.warning("%s: recorded NA (%s)", route.id, note)
+            else:
+                log.info("%s: no whole-party quote this run", route.id)
             continue
+        if not args.dry_run:
+            append_run(route.id, "ok", len(quotes), "", now)
 
         report_split_booking(quotes, route, passengers, config.infant_fare_pct_for(route))
         moving = analysis.trend(route_history, now)

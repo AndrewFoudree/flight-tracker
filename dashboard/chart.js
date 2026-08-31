@@ -62,10 +62,29 @@ function dailyMinimum(rows) {
 }
 
 function movingAverage(series, window) {
-  return series.map((_, i) => {
-    const slice = series.slice(Math.max(0, i - window + 1), i + 1);
-    return slice.reduce((sum, [, v]) => sum + v, 0) / slice.length;
+  return series.map(([, value], i) => {
+    if (value === null) return null;                 // no data, no average
+    const slice = series
+      .slice(Math.max(0, i - window + 1), i + 1)
+      .filter(([, v]) => v !== null);
+    return slice.length ? slice.reduce((sum, [, v]) => sum + v, 0) / slice.length : null;
   });
+}
+
+/* Days the tracker ran but got nothing. Drawn as gaps rather than dropped, so a
+   blind stretch is visible instead of looking like flat prices. */
+function naDaysFor(runs, routeId) {
+  return new Set(
+    runs
+      .filter((r) => r.route_id === routeId && r.status !== "ok")
+      .map((r) => r.observed_at.slice(0, 10))
+  );
+}
+
+function mergeSeries(priced, naDays) {
+  const byDay = new Map(priced);
+  for (const day of naDays) if (!byDay.has(day)) byDay.set(day, null);
+  return [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 }
 
 const money = (value, currency) =>
@@ -124,8 +143,24 @@ function latestPull(rows, route) {
   return departures.length ? { day, departures } : null;
 }
 
-function renderLatestPull(card, route, rows) {
+function renderLatestPull(card, route, rows, runs) {
+  const mine = runs.filter((r) => r.route_id === route.id);
+  const newest = mine.length ? mine[mine.length - 1] : null;
   const pull = latestPull(rows, route);
+
+  if (newest && newest.status !== "ok") {
+    const section = document.createElement("div");
+    section.className = "pull";
+    section.innerHTML = `
+      <h3>Most recent pull</h3>
+      <p class="when">Checked ${fmtDay(newest.observed_at.slice(0, 10))}</p>
+      <p class="na-box"><strong>NA &mdash; no data returned.</strong> ${
+        newest.note || newest.status
+      }.${
+        pull ? ` Last successful pull was ${fmtDay(pull.day)}; its figures are below.` : ""
+      }</p>`;
+    card.appendChild(section);
+  }
   if (!pull) return;
 
   const seats = route.adults + route.children;          // a lap infant buys no seat
@@ -157,7 +192,7 @@ function renderLatestPull(card, route, rows) {
   const section = document.createElement("div");
   section.className = "pull";
   section.innerHTML = `
-    <h3>Most recent pull</h3>
+    <h3>${newest && newest.status !== "ok" ? "Last successful pull" : "Most recent pull"}</h3>
     <p class="when">Checked ${fmtDay(pull.day)} &middot; ${pull.departures.length} departure(s) priced</p>
     <div class="scroll"><table>
       <thead><tr>
@@ -182,12 +217,14 @@ function fmtDay(iso) {
   });
 }
 
-function renderRoute(container, route, rows) {
-  const series = dailyMinimum(partyRows(rows, route));
+function renderRoute(container, route, rows, runs) {
+  const priced = dailyMinimum(partyRows(rows, route));
+  const naDays = naDaysFor(runs, route.id);
+  const series = mergeSeries(priced, naDays);
   const card = document.createElement("section");
   card.className = "route";
 
-  if (!series.length) {
+  if (!priced.length) {
     card.innerHTML = `<header><h2>${route.origin} &rarr; ${route.destination}
       <small>${route.id}</small></h2></header>
       <p class="note">No whole-party observations recorded yet.</p>`;
@@ -195,9 +232,10 @@ function renderRoute(container, route, rows) {
     return;
   }
 
-  const latest = series[series.length - 1][1];
-  const cheapest = Math.min(...series.map(([, v]) => v));
-  const recent = series.slice(-30);
+  const values = series.filter(([, v]) => v !== null);
+  const latest = values[values.length - 1][1];
+  const cheapest = Math.min(...values.map(([, v]) => v));
+  const recent = values.slice(-30);
   const average = recent.reduce((sum, [, v]) => sum + v, 0) / recent.length;
   const party = `${route.adults}a ${route.children}c ${route.infants}i`;
 
@@ -214,13 +252,15 @@ function renderRoute(container, route, rows) {
       </div>
     </header>
     <div class="chart"><canvas></canvas></div>
-    <p class="note">${series.length} day(s) of history &middot; tracking since ${series[0][0]}</p>`;
+    <p class="note">${values.length} day(s) of history &middot; tracking since ${series[0][0]}${
+      naDays.size ? ` &middot; <span class="na">${naDays.size} day(s) with no data</span>` : ""
+    }</p>`;
   container.appendChild(card);
 
   const ink = getComputedStyle(document.body).getPropertyValue("--text").trim();
   const grid = getComputedStyle(document.body).getPropertyValue("--line").trim();
 
-  renderLatestPull(card, route, rows);
+  renderLatestPull(card, route, rows, runs);
 
   new Chart(card.querySelector("canvas"), {
     type: "line",
@@ -230,6 +270,7 @@ function renderRoute(container, route, rows) {
         {
           label: "Cheapest that day",
           data: series.map(([, price]) => price),
+          spanGaps: false,                    // a blind day breaks the line
           borderColor: "#5aa9e6",
           backgroundColor: "rgba(90,169,230,.12)",
           fill: true, tension: .25, pointRadius: 2, borderWidth: 2,
@@ -255,7 +296,10 @@ function renderRoute(container, route, rows) {
         legend: { labels: { color: ink, boxWidth: 12, usePointStyle: true } },
         tooltip: {
           callbacks: {
-            label: (ctx) => `${ctx.dataset.label}: ${money(ctx.parsed.y, route.currency)}`,
+            label: (ctx) =>
+              ctx.parsed.y === null || ctx.parsed.y === undefined
+                ? `${ctx.dataset.label}: no data`
+                : `${ctx.dataset.label}: ${money(ctx.parsed.y, route.currency)}`,
           },
         },
       },
@@ -278,6 +322,11 @@ async function main() {
       firstThatLoads("prices.csv"),
       firstThatLoads("routes.json"),
     ]);
+    // Optional: absent until the first run that records an outcome.
+    let runs = [];
+    try {
+      runs = parseCsv(await firstThatLoads("runs.csv"));
+    } catch (_) { /* no run log yet */ }
     const rows = parseCsv(csv);
     const routes = JSON.parse(meta);
     if (!rows.length) {
@@ -289,7 +338,7 @@ async function main() {
     const last = rows[rows.length - 1].observed_at;
     subtitle.textContent =
       `${routes.length} route(s) · ${rows.length} observations · last checked ${last}`;
-    routes.forEach((route) => renderRoute(container, route, rows));
+    routes.forEach((route) => renderRoute(container, route, rows, runs));
   } catch (error) {
     container.innerHTML = `<div class="error">${error.message}</div>`;
     subtitle.textContent = "";
