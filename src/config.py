@@ -26,10 +26,26 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+def turns_two_on(born: date) -> date:
+    """The day a child stops being a lap infant.
+
+    A 29 February birthday has no anniversary in a non-leap year; 1 March is the
+    conventional treatment, and it errs toward buying a seat.
+    """
+    try:
+        return born.replace(year=born.year + 2)
+    except ValueError:                      # 29 February
+        return date(born.year + 2, 3, 1)
+
+
 class PassengerConfig(_Strict):
     adults: int = Field(ge=1, le=9)
     children: int = Field(ge=0, le=9)
     infants: int = Field(ge=0, le=9)
+    # Optional, but strongly recommended: lap-infant eligibility depends on the
+    # flight date, not the booking date. Without it the counts above are taken
+    # on trust and a child who has aged out is priced as free.
+    infant_birthdates: list[date] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _check_party(self) -> "PassengerConfig":
@@ -37,10 +53,23 @@ class PassengerConfig(_Strict):
             raise ValueError("infants may not outnumber adults: each lap infant needs an adult lap")
         if self.adults + self.children > 9:
             raise ValueError("most carriers cap a single booking at 9 seated passengers")
+        if self.infant_birthdates and len(self.infant_birthdates) != self.infants:
+            raise ValueError(
+                f"infant_birthdates has {len(self.infant_birthdates)} entries "
+                f"but infants is {self.infants}"
+            )
         return self
 
-    def to_passengers(self) -> Passengers:
-        return Passengers(self.adults, self.children, self.infants)
+    def to_passengers(self, on: date | None = None) -> Passengers:
+        """Passenger split as it applies on `on`.
+
+        An infant who has turned two by then is a child who needs a seat, and is
+        counted as one. Without birthdates the configured counts are used as given.
+        """
+        if on is None or not self.infant_birthdates:
+            return Passengers(self.adults, self.children, self.infants)
+        aged_out = sum(1 for born in self.infant_birthdates if turns_two_on(born) <= on)
+        return Passengers(self.adults, self.children + aged_out, self.infants - aged_out)
 
 
 class Budget(_Strict):
@@ -185,8 +214,55 @@ class Config(_Strict):
 
     # Resolution helpers: per-route value, falling back to defaults.
 
+    def travel_end_date(self, route: Route) -> date:
+        """The last day anyone is in the air on this route."""
+        if route.depart is not None:
+            return route.return_ or route.depart
+        window = route.depart_window
+        assert window is not None
+        return window.latest + timedelta(days=route.nights or 0)
+
     def passengers_for(self, route: Route) -> Passengers:
-        return (route.passengers or self.defaults.passengers).to_passengers()
+        """Passenger split priced for this route.
+
+        Classified on the *last* travel date rather than the departure. A child
+        who turns two mid-trip needs a seat for the return, so the trip has to be
+        priced with that seat or the quote is not the price you will pay.
+        """
+        config = route.passengers or self.defaults.passengers
+        return config.to_passengers(on=self.travel_end_date(route))
+
+    def infant_notes(self, route: Route) -> list[str]:
+        """Human-readable warnings about lap-infant eligibility on this route."""
+        config = route.passengers or self.defaults.passengers
+        if not config.infant_birthdates:
+            if config.infants:
+                return [
+                    f"{route.id}: infant_birthdates is not set, so the "
+                    f"{config.infants} lap infant(s) are taken on trust. A child who "
+                    "has turned two needs a seat and is being priced as free."
+                ]
+            return []
+
+        notes: list[str] = []
+        first_departure = (
+            route.depart if route.depart is not None else route.depart_window.earliest
+        )
+        last_day = self.travel_end_date(route)
+        for born in config.infant_birthdates:
+            birthday = turns_two_on(born)
+            if birthday <= first_departure:
+                notes.append(
+                    f"{route.id}: a child born {born} turns two on {birthday}, before "
+                    f"departure on {first_departure}. Priced with a seat, not as a lap infant."
+                )
+            elif birthday <= last_day:
+                notes.append(
+                    f"{route.id}: a child born {born} turns two on {birthday}, mid-trip "
+                    f"(travel ends {last_day}). A lap infant outbound still needs a seat "
+                    "on the return, so the whole trip is priced with a seat."
+                )
+        return notes
 
     def currency_for(self, route: Route) -> str:
         return route.currency or self.defaults.currency

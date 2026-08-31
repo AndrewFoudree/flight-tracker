@@ -119,3 +119,70 @@ def test_budget_spendable_only_meters_serpapi():
     config = make_config()
     assert config.budget.spendable("serpapi") == 230
     assert config.budget.spendable("travelpayouts") is None
+
+
+# --- lap-infant eligibility ---------------------------------------------
+
+BORN = "2025-05-20"          # turns two on 2027-05-20
+
+
+def with_birthdate(born: str = BORN, **route_changes) -> Config:
+    raw = mutate(**route_changes)
+    raw["defaults"]["passengers"]["infant_birthdates"] = [born]
+    return Config.model_validate(raw)
+
+
+def test_birthdates_must_match_the_infant_count():
+    raw = mutate()
+    raw["defaults"]["passengers"]["infant_birthdates"] = [BORN, "2024-01-01"]
+    with pytest.raises(ValidationError, match="infant_birthdates has 2 entries"):
+        Config.model_validate(raw)
+
+
+def test_an_infant_still_under_two_keeps_the_lap_seat():
+    config = with_birthdate()                       # March 2027 trip, he is 21 months
+    passengers = config.passengers_for(config.routes[0])
+    assert (passengers.adults, passengers.children, passengers.infants) == (2, 4, 1)
+    assert passengers.seated == 6
+    assert config.infant_notes(config.routes[0]) == []
+
+
+def test_an_infant_who_has_aged_out_is_priced_as_a_child_with_a_seat():
+    config = with_birthdate(depart="2027-08-01", **{"return": "2027-08-08"})
+    passengers = config.passengers_for(config.routes[0])
+    assert (passengers.adults, passengers.children, passengers.infants) == (2, 5, 0)
+    assert passengers.seated == 7
+    assert "before departure" in config.infant_notes(config.routes[0])[0]
+
+
+def test_a_birthday_mid_trip_prices_the_whole_trip_with_a_seat():
+    """He flies out at 23 months and home at two. The return needs a seat, so the
+    itinerary has to be priced with one."""
+    config = with_birthdate(depart="2027-05-15", **{"return": "2027-05-25"})
+    assert config.passengers_for(config.routes[0]).seated == 7
+    assert "mid-trip" in config.infant_notes(config.routes[0])[0]
+
+
+def test_a_flexible_window_is_classified_on_its_last_possible_travel_day():
+    raw = mutate()
+    raw["routes"][0].pop("depart")
+    raw["routes"][0].pop("return")
+    raw["routes"][0]["depart_window"] = {"earliest": "2027-05-01", "latest": "2027-05-30"}
+    raw["routes"][0]["nights"] = 7
+    raw["defaults"]["passengers"]["infant_birthdates"] = [BORN]
+    config = Config.model_validate(raw)
+    assert config.travel_end_date(config.routes[0]).isoformat() == "2027-06-06"
+    assert config.passengers_for(config.routes[0]).seated == 7
+
+
+def test_a_leap_day_birthday_ages_out_on_the_first_of_march():
+    from src.config import turns_two_on
+    from datetime import date as d
+    assert turns_two_on(d(2024, 2, 29)) == d(2026, 3, 1)
+    assert turns_two_on(d(2025, 5, 20)) == d(2027, 5, 20)
+
+
+def test_without_birthdates_the_configured_counts_are_used_but_flagged():
+    config = make_config()
+    assert config.passengers_for(config.routes[0]).infants == 1
+    assert "taken on trust" in config.infant_notes(config.routes[0])[0]

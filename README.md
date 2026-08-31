@@ -169,11 +169,39 @@ international is typically around 10% of the adult fare plus taxes. The APIs tre
 this as a distinct `infants` parameter, so it stays separate from `children` in the
 config rather than being folded into the count.
 
-Two things to remember at booking time:
+**Age is measured at the flight date, not the booking date.** For a trip more
+than a year out, a lap infant today may well be a seated child by departure, and
+that is a whole extra fare the quote would otherwise miss.
+
+Give the tracker the birth date and it works this out per route:
+
+```yaml
+defaults:
+  passengers:
+    adults: 2
+    children: 4
+    infants: 1
+    infant_birthdates: ["2025-05-20"]
+```
+
+| Trip | Age at travel | Priced as |
+|---|---|---|
+| March 2027 | 21 months | Lap infant, 6 seats |
+| June 2027 | just turned 2 | Seated child, 7 seats |
+
+Classification uses the **last** travel date of the itinerary, not the departure.
+A child who turns two mid-trip needs a seat for the return, so the whole trip is
+priced with that seat. Flexible windows use the latest possible return date, which
+is the conservative choice. Each reclassification is logged with the reason.
+
+Leave `infant_birthdates` unset and the configured counts are used as written, but
+every run warns that lap-infant status is being taken on trust.
+
+Two more things at booking time:
 
 - Airlines verify age at check-in with a birth certificate or passport.
-- **An infant turning two before the return flight needs a full seat on the
-  return.** A birthday mid-trip changes the booking.
+- A 29 February birthday has no anniversary in a non-leap year. The tracker ages
+  the child out on 1 March, which errs toward buying a seat.
 
 ## Data
 

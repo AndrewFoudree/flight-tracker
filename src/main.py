@@ -200,6 +200,9 @@ def run(args: argparse.Namespace) -> int:
     state = alerting.load_state()
     alerts_fired = 0
 
+    for note in (n for r in routes for n in config.infant_notes(r)):
+        log.warning(note)
+
     for route in routes:
         passengers = config.passengers_for(route)
         route_history = analysis.route_rows(history, route.id, passengers=passengers)

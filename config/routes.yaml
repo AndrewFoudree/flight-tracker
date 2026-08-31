@@ -2,7 +2,11 @@ defaults:
   passengers:
     adults: 2
     children: 4          # ages 2 to 11
-    infants: 1           # under 2, lap infant
+    infants: 1           # under 2 at the time of travel, lap infant
+    # Lap-infant eligibility depends on the flight date, not today. Fill this in
+    # and the tracker prices a seat automatically from the trip where he turns
+    # two. Until it is set, the count above is taken on trust and the run warns.
+    # infant_birthdates: ["2025-05-20"]
   currency: USD
   cabin: economy
   sources: [serpapi, travelpayouts]
