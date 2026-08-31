@@ -23,15 +23,14 @@ budget:
 
 routes:
   # Chosen from a full sweep of all 31 January departures at 4, 5 and 7 nights.
-  # $2,955 ($492 a seat) is a hard floor this route keeps returning to, and it is
-  # reachable at every trip length, so a shorter trip costs nothing. Several
-  # January dates tie at that floor; this one departs on a Saturday, sits in the
-  # coldest part of Iowa winter, and clears the volatile New Year window.
+  # $2,955 ($492 a seat) is a hard floor this route keeps returning to, reachable
+  # at every trip length tested, so trip length costs nothing. Many January dates
+  # tie at it; this one is weekday to weekday and sits entirely inside January.
   - id: dsm-stt-jan
     origin: DSM
     destination: STT   # St. Thomas, US Virgin Islands
-    depart: "2027-01-23"       # Saturday
-    return: "2027-01-28"       # Thursday, 5 nights
+    depart: "2027-01-07"       # Thursday
+    return: "2027-01-12"       # Tuesday, 5 nights
     threshold_usd: 2800        # below the observed floor, so an alert means something
     alert_on:
       - absolute_below: 2800   # a genuine break below the floor
