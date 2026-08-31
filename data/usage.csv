@@ -8,3 +8,5 @@ observed_at,source,route_id,searches
 2026-08-31T17:00:42Z,travelpayouts,dsm-den-flex,1
 2026-08-31T19:18:11Z,serpapi,survey,23
 2026-08-31T19:25:13Z,serpapi,survey,33
+2026-08-31T19:34:59Z,serpapi,dsm-stt-january,5
+2026-08-31T19:34:59Z,travelpayouts,dsm-stt-january,1

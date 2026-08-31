@@ -1,6 +1,6 @@
 [
   {
-    "id": "dsm-stt-spring",
+    "id": "dsm-stt-january",
     "origin": "DSM",
     "destination": "STT",
     "threshold_usd": 2800.0,
@@ -9,8 +9,12 @@
     "children": 4,
     "infants": 1,
     "party_size": 7,
-    "depart": "2027-03-14",
-    "return": "2027-03-21",
-    "window": null
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-03",
+      "latest": "2027-01-31",
+      "nights": 7
+    }
   }
 ]
