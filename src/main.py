@@ -194,11 +194,15 @@ def run(args: argparse.Namespace) -> int:
     log.info("loaded %s historical rows from %s", len(history), prices_path)
 
     quotes: list[Quote] = []
+    # Built even for a dry run: reading the provider's remaining balance is free
+    # and does not count against the plan, so checking the budget should never
+    # cost a search.
+    budget = Budget(config, now)
+    log.info(budget.summary())
+
     if args.dry_run:
         log.info("dry run: no API calls, analysing stored history only")
     else:
-        budget = Budget(config, now)
-        log.info(budget.summary())
         quotes, usage = collect(config, budget, routes)
         origins = {r.id: r.origin for r in config.routes}
         destinations = {r.id: r.destination for r in config.routes}
