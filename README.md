@@ -240,9 +240,15 @@ At one route a day that is years away.
 
 ## Dashboard
 
-`dashboard/` is one HTML file and one JS file, deployed to Pages on every push that
-touches `dashboard/` or `data/`. Since the price workflow pushes daily, the
-dashboard refreshes itself. The page fetches the CSV at load and parses it
+`dashboard/` is one HTML file and one JS file. The daily price run deploys it
+itself, as its second job, so the published page always matches the data that run
+committed. `publish-dashboard.yml` covers hand edits to `dashboard/`.
+
+That split is deliberate: **a push made with `GITHUB_TOKEN` does not trigger other
+workflows.** GitHub suppresses those events to prevent recursion, so the bot's
+daily data commit can never fire a separate deploy workflow. Wiring the deploy
+into the same run is what keeps the page from silently freezing while history
+accumulates behind it. The page fetches the CSV at load and parses it
 client-side; Chart.js comes from a CDN. No framework, no build step.
 
 Each route gets a line chart of the cheapest observation per day, with the 7-day

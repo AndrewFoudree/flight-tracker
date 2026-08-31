@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      # Data commits come from the bot and cannot trigger this workflow, so
+      # check-prices.yml deploys those itself. This covers human edits.
       - "dashboard/**"
-      - "data/**"
       - ".github/workflows/publish-dashboard.yml"
   workflow_dispatch:
 

@@ -16,6 +16,8 @@ on:
 permissions:
   contents: write           # commit the CSV
   issues: write             # open alert issues
+  pages: write              # publish the refreshed dashboard
+  id-token: write
 
 # Two runs writing data/ at once would fight over the push.
 concurrency:
@@ -54,3 +56,33 @@ jobs:
           # The dashboard deploy may have pushed since checkout.
           git pull --rebase --autostash
           git push
+
+  # A push made with GITHUB_TOKEN does not trigger other workflows, so the daily
+  # price commit can never fire publish-dashboard.yml. Deploying here instead is
+  # what actually keeps the published page in step with the data.
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main         # the tip, including the commit the check job just pushed
+
+      - name: Stage the site
+        run: |
+          mkdir -p _site/data
+          cp dashboard/* _site/
+          cp data/prices.csv data/routes.json _site/data/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
