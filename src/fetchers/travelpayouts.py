@@ -139,7 +139,27 @@ class TravelpayoutsFetcher(Fetcher):
             )
 
         if not quotes:
-            log.warning("travelpayouts: nothing in scope for %s", route.id)
+            # Distinguish an empty cache from an over-strict filter: the first is
+            # the API having no fares, the second is our own bug.
+            if not data:
+                log.warning(
+                    "travelpayouts: %s returned no cached fares at all for %s",
+                    route.origin + "-" + route.destination, route.id,
+                )
+            else:
+                sample = ", ".join(
+                    f"{str(e.get('departure_at'))[:10]}->{str(e.get('return_at'))[:10]}"
+                    for e in data[:5]
+                )
+                log.warning(
+                    "travelpayouts: %s fares returned for %s but none in scope; got %s",
+                    len(data), route.id, sample,
+                )
+        else:
+            log.info(
+                "travelpayouts: %s of %s returned fares are in scope for %s",
+                len(quotes), len(data), route.id,
+            )
         return quotes
 
     @staticmethod
