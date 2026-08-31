@@ -18,16 +18,47 @@ def mutate(**route_changes) -> dict:
     return raw
 
 
+def runs_per_month(workflow: str = ".github/workflows/check-prices.yml") -> int:
+    """How often the schedule fires, read from the workflow's cron.
+
+    Spend is routes x searches x cadence, so a budget check that assumes daily
+    runs is wrong the moment the schedule changes.
+    """
+    import re
+    from pathlib import Path
+
+    text = Path(workflow).read_text(encoding="utf-8")
+    cron = re.search(r'- cron: "([^"]+)"', text)
+    assert cron, "no cron found in the price workflow"
+    day_of_month = cron.group(1).split()[2]
+    every = re.match(r"\*/(\d+)$", day_of_month)
+    return 31 // int(every.group(1)) + 1 if every else 31
+
+
 def test_shipped_config_is_valid():
     """The live config must parse. Route ids change with travel plans, so this
     asserts validity and budget fit rather than pinning specific routes."""
     config = load_config("config/routes.yaml")
     assert config.routes
-    monthly = sum(len(config.search_dates_for(r)) * (2 if r.compare_split_booking else 1)
-                  for r in config.routes) * 30
-    assert monthly <= config.budget.spendable("serpapi"), (
-        f"the configured routes need {monthly} searches a month, over budget"
+    per_run = sum(
+        len(config.search_dates_for(r)) * (2 if r.compare_split_booking else 1)
+        for r in config.routes
     )
+    monthly = per_run * runs_per_month()
+    assert monthly <= config.budget.spendable("serpapi"), (
+        f"{per_run} searches a run at {runs_per_month()} runs a month is {monthly}, "
+        f"over the {config.budget.spendable('serpapi')} cap"
+    )
+
+
+def test_a_daily_schedule_would_not_fit_the_current_routes():
+    """Guards the reason the schedule is every other day rather than daily."""
+    config = load_config("config/routes.yaml")
+    per_run = sum(
+        len(config.search_dates_for(r)) * (2 if r.compare_split_booking else 1)
+        for r in config.routes
+    )
+    assert per_run * 31 > config.budget.spendable("serpapi")
 
 
 def test_defaults_resolve_per_route():

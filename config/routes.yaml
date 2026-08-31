@@ -22,21 +22,23 @@ budget:
   reserve: 20            # stop before hitting zero
 
 routes:
-  # Chosen from a full sweep of all 31 January departures at 4, 5 and 7 nights.
-  # $2,955 ($492 a seat) is a hard floor this route keeps returning to, reachable
-  # at every trip length tested, so trip length costs nothing. Many January dates
-  # tie at it; this one is weekday to weekday and sits entirely inside January.
-  - id: dsm-stt-jan07
+  # January was the cheapest month of the year: median $2,970 against $3,058 to
+  # $3,201 elsewhere, and the most days sitting on the $2,955 floor. Thu -> Tue
+  # is 5 nights; the window steps 7 days so it lands on all four January
+  # Thursdays and nothing else.
+  - id: dsm-stt-jan-thursdays
     origin: DSM
     destination: STT   # St. Thomas, US Virgin Islands
-    depart: "2027-01-07"       # Thursday
-    return: "2027-01-12"       # Tuesday, 5 nights
+    depart_window:
+      earliest: "2027-01-07"   # first Thursday
+      latest: "2027-01-28"     # last Thursday
+    nights: 5                  # Thursday -> Tuesday
+    window_step_days: 7        # Thursdays only: Jan 7, 14, 21, 28
     threshold_usd: 2800        # below the observed floor, so an alert means something
     alert_on:
       - absolute_below: 2800   # a genuine break below the floor
       - lowest_in_days: 30
       - percent_drop: 5
-    # A fixed date costs 1 search a run, so the single-adult probe fits again.
-    # It measures fare-bucket depth: when group total starts exceeding 6x single,
-    # the cheap seats are draining and it is time to book.
+    # Both searches on every departure: 4 dates x 2 = 8 a run. At every-other-day
+    # that is 128 a month, inside the 230 cap. Daily would be 248 and overrun it.
     compare_split_booking: true
