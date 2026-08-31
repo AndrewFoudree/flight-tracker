@@ -22,15 +22,23 @@ budget:
   reserve: 20            # stop before hitting zero
 
 routes:
-  - id: dsm-stt-spring
+  # Chosen from the year survey, not guessed. $2,955 total is a hard floor for
+  # this route and party ($492 a seat); nothing in 61 sampled departures beat it.
+  # January hits that floor repeatedly, so the window tracks the whole month and
+  # reports whichever day is cheapest rather than betting on one date.
+  - id: dsm-stt-january
     origin: DSM
     destination: STT   # St. Thomas, US Virgin Islands
-    depart: "2027-03-14"
-    return: "2027-03-21"
-    threshold_usd: 2800          # total for the party
+    depart_window:
+      earliest: "2027-01-03"   # after the New Year spike; Dec 25 hit $6,969
+      latest: "2027-01-31"
+    nights: 7
+    window_step_days: 7        # 5 departures a run, 150 searches a month
+    threshold_usd: 2800        # below the observed floor, so it means something
     alert_on:
-      - absolute_below: 2800
+      - absolute_below: 2800   # a genuine break below the floor
       - lowest_in_days: 30
-      - percent_drop: 10         # versus previous observation
-    compare_split_booking: true
-
+      - percent_drop: 5
+    # The party and single-adult probe were within $3, so the fare buckets are
+    # deep. Re-enable if the window narrows to a fixed date.
+    compare_split_booking: false

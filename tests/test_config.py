@@ -19,8 +19,15 @@ def mutate(**route_changes) -> dict:
 
 
 def test_shipped_config_is_valid():
+    """The live config must parse. Route ids change with travel plans, so this
+    asserts validity and budget fit rather than pinning specific routes."""
     config = load_config("config/routes.yaml")
-    assert [r.id for r in config.routes] == ["dsm-stt-spring"]
+    assert config.routes
+    monthly = sum(len(config.search_dates_for(r)) * (2 if r.compare_split_booking else 1)
+                  for r in config.routes) * 30
+    assert monthly <= config.budget.spendable("serpapi"), (
+        f"the configured routes need {monthly} searches a month, over budget"
+    )
 
 
 def test_defaults_resolve_per_route():
