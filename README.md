@@ -248,6 +248,20 @@ Three findings worth keeping:
   Tuesday) and was worthless for comparison until re-run at a 3-day step, which
   rotates through every weekday.
 
+Trip length was swept the same way, across every January departure:
+
+| Nights | Cheapest |
+|---|---|
+| 3 | $3,423 |
+| 4 to 9 | $2,955 |
+
+$2,955 is a fare-bucket floor, not a coincidence: it recurs across six trip
+lengths and roughly 550 quotes. The classic minimum-stay penalty exists but only
+below four nights. Above that, length is free, and so is the day of the week --
+Saturday, Thursday and Tuesday January departures all price identically. Weekday
+departures did beat weekends in March ($372), so the rule is real; it just does
+not discriminate once a date sits on the floor.
+
 Re-run the survey when plans change:
 
 ```
