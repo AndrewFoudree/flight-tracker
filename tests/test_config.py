@@ -32,7 +32,11 @@ def runs_per_month(workflow: str = ".github/workflows/check-prices.yml") -> int:
     assert cron, "no cron found in the price workflow"
     day_of_month = cron.group(1).split()[2]
     every = re.match(r"\*/(\d+)$", day_of_month)
-    return 31 // int(every.group(1)) + 1 if every else 31
+    if every:
+        return 31 // int(every.group(1)) + 1
+    if re.match(r"^\d+(,\d+)*$", day_of_month):      # an explicit list of days
+        return len(day_of_month.split(","))
+    return 31                                        # every day
 
 
 def test_shipped_config_is_valid():
@@ -52,7 +56,7 @@ def test_shipped_config_is_valid():
 
 
 def test_a_daily_schedule_would_not_fit_the_current_routes():
-    """Guards the reason the schedule is every other day rather than daily."""
+    """Guards the reason the schedule is not daily."""
     config = load_config("config/routes.yaml")
     per_run = sum(
         len(config.search_dates_for(r)) * (2 if r.compare_split_booking else 1)

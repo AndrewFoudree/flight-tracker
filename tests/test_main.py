@@ -101,12 +101,12 @@ def test_a_failing_source_does_not_end_the_run(workspace, monkeypatch):
     assert load_state() == {}
 
 
-def test_an_exhausted_budget_skips_the_search_and_reports_it(workspace):
-    """Running dry is not a quiet day. Nothing is queried, nothing is written,
-    and the run reports non-zero so the failure surfaces instead of looking like
-    flat prices on the dashboard."""
+def test_an_exhausted_budget_stops_quietly(workspace):
+    """A spent budget is a state we chose, not a malfunction, so it warns rather
+    than failing the workflow. Compare test_a_blind_run_reports_failure: sources
+    breaking while budget remains is a real fault and does go red."""
     storage.append_usage("serpapi", "dsm-mco-spring", 230, utcnow())
-    assert run() == 1
+    assert run() == 0
     assert storage.read_history(storage.PRICES_PATH) == []
 
 

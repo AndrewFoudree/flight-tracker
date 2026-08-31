@@ -257,9 +257,16 @@ def run(args: argparse.Namespace) -> int:
     log.info("done: %s quotes this run, %s alert(s)", len(quotes), alerts_fired)
 
     if not args.dry_run and not quotes:
-        # Silence is the dangerous failure here: the dashboard just flatlines and
-        # looks like stable prices. Exit non-zero so the workflow goes red and
-        # GitHub emails it, which needs no extra credentials.
+        # Silence is the dangerous failure: the dashboard flatlines and looks
+        # like stable prices. Going red gets GitHub to email it, with no extra
+        # credentials needed. But a spent budget is a state we chose, not a
+        # malfunction, so it warns without crying wolf.
+        if not budget.can_afford("serpapi", 1):
+            log.warning(
+                "no quotes: the SerpAPI budget is spent for this cycle. "
+                "The tracker resumes automatically when the plan renews."
+            )
+            return 0
         log.error("no quotes collected from any source: the tracker is blind")
         return 1
     return 0

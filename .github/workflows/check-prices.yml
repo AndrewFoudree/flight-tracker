@@ -2,9 +2,12 @@ name: Check flight prices
 
 on:
   schedule:
-    # Every other day. Four January departures x party + single-adult probe is
-    # 8 searches a run; daily would be 248 a month against a 230 cap.
-    - cron: "0 13 */2 * *"   # 13:00 UTC, roughly 08:00 Central
+    # TEMPORARY, until the SerpAPI plan renews on 30 Sep 2026. Setting this
+    # tracker up spent 200 of the 250-search cycle, leaving ~30 usable. Four
+    # January departures x party + single-adult probe is 8 searches a run, so
+    # three runs is what fits. Restore "0 13 */2 * *" (every other day, ~120 a
+    # month) once the cycle resets.
+    - cron: "0 13 1,11,21 * *"   # 13:00 UTC, roughly 08:00 Central
   workflow_dispatch:        # manual trigger for testing
     inputs:
       route:
