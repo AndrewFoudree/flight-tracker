@@ -1,6 +1,6 @@
 [
   {
-    "id": "dsm-stt-jan",
+    "id": "dsm-stt-jan-thursdays",
     "origin": "DSM",
     "destination": "STT",
     "threshold_usd": 2800.0,
@@ -9,8 +9,12 @@
     "children": 4,
     "infants": 1,
     "party_size": 7,
-    "depart": "2027-01-23",
-    "return": "2027-01-28",
-    "window": null
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-07",
+      "latest": "2027-01-28",
+      "nights": 5
+    }
   }
 ]
