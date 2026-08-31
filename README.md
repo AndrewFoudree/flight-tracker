@@ -111,9 +111,15 @@ Two things multiply the cost, and both are opt-in:
 - **`compare_split_booking: true`** doubles a route's SerpAPI cost (party query
   plus single-adult probe). Enable it only on routes you are seriously considering.
 - **Flexible windows** cost one SerpAPI search per step through the window. A
-  30-day window at the default 7-day step is 5 searches per run, which is most of
-  a day's allowance. Travelpayouts covers a whole month in one unmetered call, so
-  windowed routes default to it in the shipped config.
+  30-day window at the default 7-day step is 6 searches per run. Widen
+  `window_step_days` to trade resolution for allowance: a 10-day step covers the
+  same month in 4.
+
+**Travelpayouts is thin on regional US routes.** Its cheap-fares endpoints are
+built from real Aviasales user searches, so a route nobody searches returns an
+empty array. Verified on DSM-DEN and DSM-STT for 2027 departures: no cached fares
+at all. It costs nothing to leave enabled in case the cache fills closer to
+departure, but do not plan a route around it without checking first.
 
 Travelpayouts is unmetered as far as this tracker is concerned and is never
 budget-limited.

@@ -44,6 +44,7 @@ routes:
     threshold_usd: 1900
     alert_on:
       - lowest_in_days: 45
-    # A 30-day window at a 7-day step is 5 SerpAPI searches per run, which is
-    # most of the daily allowance. Travelpayouts covers windows for free.
-    sources: [travelpayouts]
+    # Travelpayouts has no cached fares for DSM-DEN this far out, so this route
+    # needs SerpAPI. A 10-day step prices Jun 1, 11, 21 and 30: four searches a
+    # run, 120 a month, which fits alongside the STT route inside the 230 cap.
+    window_step_days: 10
