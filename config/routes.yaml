@@ -22,9 +22,9 @@ budget:
   reserve: 20            # stop before hitting zero
 
 routes:
-  - id: dsm-mco-spring
+  - id: dsm-stt-spring
     origin: DSM
-    destination: MCO
+    destination: STT   # St. Thomas, US Virgin Islands
     depart: "2027-03-14"
     return: "2027-03-21"
     threshold_usd: 2800          # total for the party

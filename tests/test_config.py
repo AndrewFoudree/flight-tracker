@@ -20,7 +20,7 @@ def mutate(**route_changes) -> dict:
 
 def test_shipped_config_is_valid():
     config = load_config("config/routes.yaml")
-    assert [r.id for r in config.routes] == ["dsm-mco-spring", "dsm-den-flex"]
+    assert [r.id for r in config.routes] == ["dsm-stt-spring", "dsm-den-flex"]
 
 
 def test_defaults_resolve_per_route():

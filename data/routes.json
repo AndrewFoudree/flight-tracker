@@ -1,8 +1,8 @@
 [
   {
-    "id": "dsm-mco-spring",
+    "id": "dsm-stt-spring",
     "origin": "DSM",
-    "destination": "MCO",
+    "destination": "STT",
     "threshold_usd": 2800.0,
     "currency": "USD",
     "adults": 2,

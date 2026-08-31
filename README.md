@@ -35,9 +35,9 @@ Adding a route is a config change, never a code change. Two shapes are supported
 
 ```yaml
 # Fixed dates
-- id: dsm-mco-spring
+- id: dsm-stt-spring
   origin: DSM
-  destination: MCO
+  destination: STT
   depart: "2027-03-14"
   return: "2027-03-21"
   threshold_usd: 2800          # total for the whole party
@@ -186,8 +186,12 @@ defaults:
 
 | Trip | Age at travel | Priced as |
 |---|---|---|
-| March 2027 | 21 months | Lap infant, 6 seats |
-| June 2027 | just turned 2 | Seated child, 7 seats |
+| STT, March 2027 | 21 months | Lap infant, 6 seats |
+| DEN, June 2027 | just turned 2 | Seated child, 7 seats |
+
+The US Virgin Islands are a US territory, so US carriers price STT as a domestic
+destination: no passport for US citizens, and a lap infant travels free. Leave
+`infant_fare_pct` at `0` for it.
 
 Classification uses the **last** travel date of the itinerary, not the departure.
 A child who turns two mid-trip needs a seat for the return, so the whole trip is
@@ -254,7 +258,7 @@ to `../data/` (a local checkout), so the same files work in both.
 python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 python -m pytest -q                      # ~80 tests, no network, no API spend
 python -m src.main --dry-run             # re-analyse stored history
-python -m src.main --route dsm-mco-spring --no-notify
+python -m src.main --route dsm-stt-spring --no-notify
 ```
 
 Tests run against recorded fixtures in `tests/fixtures/`, so the suite never spends
