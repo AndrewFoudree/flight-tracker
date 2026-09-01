@@ -11,6 +11,7 @@ own that problem.
 from __future__ import annotations
 
 import logging
+import re
 import os
 
 import requests
@@ -20,6 +21,12 @@ from ..models import Passengers, Quote, hash_payload, utcnow
 from .base import Fetcher, FetcherError
 
 log = logging.getLogger(__name__)
+
+# Which extension strings say something about the fare rather than the cabin.
+# Everything else Google returns is amenities and carbon estimates.
+FARE_CONDITION = re.compile(
+    r"bag|fare|refund|change|seat selection|carry-on|basic", re.IGNORECASE
+)
 
 ENDPOINT = "https://serpapi.com/search.json"
 TIMEOUT = 45
@@ -84,11 +91,16 @@ class SerpApiFetcher(Fetcher):
 
     @staticmethod
     def _fare_notes(itinerary: dict, legs: list) -> str | None:
-        """Google's attribute strings for this fare, option level and per leg.
+        """The fare and baggage conditions Google states, and nothing else.
 
-        Deduplicated in first-seen order rather than sorted, because Google puts
-        the restrictive ones first and that ordering is worth keeping. Absent on
-        many results, which is not an error: it means Google said nothing, not
+        Verified against a live response on 2026-09-01: extensions arrive, but
+        they are mostly an amenity catalogue -- legroom, Wi-Fi, power outlets,
+        carbon estimates -- repeated per leg. Storing all of it added roughly
+        300 characters to every row of a CSV the dashboard fetches whole on each
+        page load, to say nothing useful.
+
+        Kept in first-seen order rather than sorted, because Google puts the
+        conditions before the amenities. Absent means Google said nothing, not
         that the fare is unrestricted.
         """
         seen: list[str] = []
@@ -98,7 +110,7 @@ class SerpApiFetcher(Fetcher):
                 continue
             for note in group:
                 text = str(note).strip()
-                if text and text not in seen:
+                if text and FARE_CONDITION.search(text) and text not in seen:
                     seen.append(text)
         return "; ".join(seen) or None
 

@@ -70,7 +70,13 @@ def is_lowest_in_days(price: float, history: list[PriceRow], days: int, now: dat
 def previous_observation(
     history: list[PriceRow], now: datetime, max_age_days: int | None = None
 ) -> PriceRow | None:
-    """The most recent observation before `now`.
+    """The cheapest quote from the most recent day before `now` that has data.
+
+    Not the last row. One run writes a row per itinerary and per carrier, so
+    `prior[-1]` is whichever quote happened to be written last -- on 2026-09-01
+    that was a $5,364 Delta fare sitting behind a $2,796 cheapest, and the
+    percent-drop rule read a 48% fall that never happened. The rule compares
+    cheapest now against cheapest then, so that is what this returns.
 
     `max_age_days` guards the percent-drop rule across a blind stretch. After a
     gap, "the previous observation" can be weeks old, and a 5% rule meant to
@@ -80,10 +86,14 @@ def previous_observation(
     prior = before(history, now)
     if not prior:
         return None
-    latest = prior[-1]
-    if max_age_days is not None and (now - latest.observed_at) > timedelta(days=max_age_days):
+    latest_day = max(row.observed_at.date() for row in prior)
+    cheapest = min(
+        (row for row in prior if row.observed_at.date() == latest_day),
+        key=lambda row: row.total_price,
+    )
+    if max_age_days is not None and (now - cheapest.observed_at) > timedelta(days=max_age_days):
         return None
-    return latest
+    return cheapest
 
 
 def percent_change(current: float, previous: float | None) -> float | None:

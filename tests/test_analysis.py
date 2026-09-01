@@ -155,3 +155,24 @@ def test_a_windowed_route_keeps_every_departure_it_prices():
     pairs = {(date(2027, 3, 14), date(2027, 3, 21))}
     rows = [price_row(1, 2955), price_row(2, 3100)]
     assert len(analysis.route_rows(rows, "dsm-mco-spring", itineraries=pairs)) == 2
+
+
+def test_the_previous_observation_is_the_cheapest_of_that_day_not_the_last_row():
+    """A run writes a row per itinerary per carrier. Taking the last row made
+    percent_drop compare against whichever quote happened to be written last:
+    on 2026-09-01 a $5,364 fare behind a $2,796 cheapest, read as a 48% fall
+    that never happened."""
+    history = [
+        price_row(1, 2796.0),
+        price_row(1, 3096.0),
+        price_row(1, 5364.0),          # written last, and wildly unrepresentative
+    ]
+    previous = analysis.previous_observation(history, NOW)
+    assert previous.total_price == 2796.0
+    assert analysis.percent_drop(2796.0, previous.total_price) is None
+
+
+def test_the_previous_observation_ignores_days_that_are_not_the_most_recent():
+    history = [price_row(9, 2000.0), price_row(1, 3000.0), price_row(1, 3400.0)]
+    assert analysis.previous_observation(history, NOW).total_price == 3000.0
+

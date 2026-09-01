@@ -204,18 +204,27 @@ def test_serpapi_captures_the_fare_attributes_google_returns():
     assert quotes[0].fare_notes == "Carry-on bag not included; Checked baggage for a fee"
 
 
-def test_serpapi_merges_leg_attributes_and_keeps_googles_order():
+def test_serpapi_keeps_fare_conditions_and_drops_the_amenity_catalogue():
+    """A live response on 2026-09-01 returned mostly legroom, Wi-Fi, power and
+    carbon estimates, repeated per leg -- ~300 characters a row saying nothing
+    about the fare, in a CSV the dashboard fetches whole on every page load."""
     config = make_config()
     payload = _with_extensions(
         load_fixture("serpapi_dsm_mco.json"),
-        ["Carry-on bag not included"],
-        ["Below average legroom (29 in)", "Carry-on bag not included"],
+        ["Carry-on bag not included", "Average legroom (31 in)"],
+        [
+            "Below average legroom (29 in)",
+            "Free Wi-Fi",
+            "Carbon emissions estimate: 542 kg",
+            "Checked baggage for a fee",
+            "Carry-on bag not included",
+        ],
     )
     quotes = serpapi(config, payload).search(config.routes[0], Passengers(2, 4, 1))
-    # Deduplicated, option level first, and not re-sorted: Google puts the
-    # restrictive attribute first and that ordering is the useful part.
+    # Deduplicated, option level first, not re-sorted: Google puts the
+    # conditions before the amenities and that ordering is the useful part.
     assert quotes[0].fare_notes == (
-        "Carry-on bag not included; Below average legroom (29 in)"
+        "Carry-on bag not included; Checked baggage for a fee"
     )
 
 

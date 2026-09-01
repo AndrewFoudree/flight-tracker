@@ -110,6 +110,10 @@ function esc(text) {
    baggage for a fee" is normal on a main-cabin fare, and flagging that would
    make the column mean nothing. */
 const RESTRICTED = /basic economy|carry-on bag not included|no carry-on/i;
+/* What a live response actually returns on these routes. Not a Basic Economy
+   marker, but for seven people a checked-bag fee each way is real money, so it
+   is worth surfacing rather than collapsing into "no flag". */
+const BAG_FEE = /checked baggage for a fee/i;
 
 const money = (value, currency) =>
   new Intl.NumberFormat(undefined, {
@@ -223,6 +227,7 @@ function renderLatestPull(card, route, rows, runs) {
   let anyWide = false;
   let anyMove = false;
   let anyBasic = false;
+  let anyBagFee = false;
 
   const body = pull.departures.map((d) => {
     const split = d.single === undefined ? null : d.single * seats;
@@ -237,7 +242,9 @@ function renderLatestPull(card, route, rows, runs) {
     if (move !== null) anyMove = true;
     const notes = d.fare_notes || "";
     const basic = RESTRICTED.test(notes);
+    const bagFee = !basic && BAG_FEE.test(notes);
     if (basic) anyBasic = true;
+    if (bagFee) anyBagFee = true;
     const depart = fmtDay(d.depart);
     // The stored URL is the six-seat search that produced this fare, so the
     // link lands on the party price rather than the one-adult one Google shows
@@ -263,7 +270,7 @@ function renderLatestPull(card, route, rows, runs) {
       <td>${d.carrier || "&mdash;"}</td>
       <td>${stops}</td>
       <td class="${basic ? "up" : ""}"${notes ? ` title="${esc(notes)}"` : ""}>${
-        basic ? "Basic?" : notes ? "&middot;&middot;&middot;" : "&mdash;"
+        basic ? "Basic?" : bagFee ? "Bags $" : notes ? "&middot;&middot;&middot;" : "&mdash;"
       }</td>
     </tr>`;
   }).join("");
@@ -288,6 +295,12 @@ function renderLatestPull(card, route, rows, runs) {
          attribute like "carry-on bag not included". Google publishes no fare
          brand here, so this is inference from what it does say &mdash; check the
          booking page before assuming six seats together and bags included.</p>`
+      : anyBagFee
+      ? `<p class="legend"><strong>Bags $</strong> means Google states a checked-bag
+         fee on this fare. No Basic Economy attribute appeared, which is not proof
+         it is a main-cabin fare, only that Google did not say so. Hover for the
+         exact wording. At ${seats} seats a checked bag each way is the difference
+         between fares this close together.</p>`
       : ""}
     <p class="legend">${
       anyWide
