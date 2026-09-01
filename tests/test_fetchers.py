@@ -179,3 +179,50 @@ def test_registry_builds_known_sources(windowed):
 def test_registry_rejects_an_unknown_source(windowed):
     with pytest.raises(KeyError, match="amadeus"):
         build_fetchers(windowed, ["amadeus"])
+
+
+# --- fare attributes ------------------------------------------------------
+
+
+def _with_extensions(payload, option_notes, leg_notes=None):
+    option = payload["best_flights"][0]
+    option["extensions"] = option_notes
+    if leg_notes is not None:
+        option["flights"][0]["extensions"] = leg_notes
+    return payload
+
+
+def test_serpapi_captures_the_fare_attributes_google_returns():
+    """The search response has no fare-brand field. These strings are the only
+    free signal that a fare is Basic Economy, so they are kept verbatim."""
+    config = make_config()
+    payload = _with_extensions(
+        load_fixture("serpapi_dsm_mco.json"),
+        ["Carry-on bag not included", "Checked baggage for a fee"],
+    )
+    quotes = serpapi(config, payload).search(config.routes[0], Passengers(2, 4, 1))
+    assert quotes[0].fare_notes == "Carry-on bag not included; Checked baggage for a fee"
+
+
+def test_serpapi_merges_leg_attributes_and_keeps_googles_order():
+    config = make_config()
+    payload = _with_extensions(
+        load_fixture("serpapi_dsm_mco.json"),
+        ["Carry-on bag not included"],
+        ["Below average legroom (29 in)", "Carry-on bag not included"],
+    )
+    quotes = serpapi(config, payload).search(config.routes[0], Passengers(2, 4, 1))
+    # Deduplicated, option level first, and not re-sorted: Google puts the
+    # restrictive attribute first and that ordering is the useful part.
+    assert quotes[0].fare_notes == (
+        "Carry-on bag not included; Below average legroom (29 in)"
+    )
+
+
+def test_serpapi_says_nothing_rather_than_nothing_known():
+    """No extensions means Google said nothing, not that the fare is unrestricted."""
+    config = make_config()
+    quotes = serpapi(config, load_fixture("serpapi_dsm_mco.json")).search(
+        config.routes[0], Passengers(2, 4, 1)
+    )
+    assert quotes[0].fare_notes is None

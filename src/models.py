@@ -56,6 +56,11 @@ class Quote:
     stops: int | None
     booking_url: str | None
     raw_response_hash: str        # for debugging without storing full payloads
+    # Google's own attribute strings for the fare, e.g. 'Carry-on bag not
+    # included'. There is no fare-brand field in the search response -- the
+    # Booking Options endpoint has one and costs a search per itinerary -- so
+    # these strings are the only free signal that a fare is Basic Economy.
+    fare_notes: str | None = None
 
     @property
     def party_size(self) -> int:

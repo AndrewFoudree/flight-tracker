@@ -77,6 +77,11 @@
            color: var(--good); border-radius: 4px;
            background: color-mix(in srgb, var(--good) 14%, transparent);
            border-left: 3px solid var(--good); }
+    td a { color: inherit; text-decoration: underline; text-underline-offset: 2px;
+           text-decoration-color: var(--muted); }
+    td a:hover { text-decoration-color: var(--good); }
+    td[title] { cursor: help; }
+    .legend.warn { color: var(--warn); }
     .na { color: var(--warn); }
     .na-box { background: color-mix(in srgb, var(--warn) 12%, transparent);
               border-left: 3px solid var(--warn); border-radius: 4px;

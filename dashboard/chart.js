@@ -17,7 +17,7 @@ async function firstThatLoads(name) {
 }
 
 /* Minimal CSV reader. The writer is Python's csv module, so quoted fields with
-   embedded commas are possible in booking_url. */
+   embedded commas are possible in booking_url and in fare_notes. */
 function parseCsv(text) {
   const rows = [];
   let field = "", row = [], quoted = false;
@@ -97,6 +97,20 @@ function mergeSeries(priced, naDays) {
   return [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 }
 
+function esc(text) {
+  return String(text === null || text === undefined ? "" : text).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
+}
+
+/* Google's search response carries no fare-brand field -- the Booking Options
+   endpoint has one and costs a search per itinerary -- so the attribute strings
+   it does return are the only free signal. Deliberately narrow: "Checked
+   baggage for a fee" is normal on a main-cabin fare, and flagging that would
+   make the column mean nothing. */
+const RESTRICTED = /basic economy|carry-on bag not included|no carry-on/i;
+
 const money = (value, currency) =>
   new Intl.NumberFormat(undefined, {
     style: "currency", currency, maximumFractionDigits: 0,
@@ -157,6 +171,10 @@ function latestPull(rows, route) {
       entry.party = price;
       entry.carrier = row.carrier;
       entry.stops = row.stops === "" ? null : Number(row.stops);
+      // Belongs to this fare, not to the departure: a cheaper quote found later
+      // has its own search URL and its own attributes.
+      entry.booking_url = row.booking_url;
+      entry.fare_notes = row.fare_notes;
     }
     if (isSingle(row) && (entry.single === undefined || price < entry.single)) {
       entry.single = price;
@@ -204,6 +222,7 @@ function renderLatestPull(card, route, rows, runs) {
   const cheapest = Math.min(...pull.departures.map((d) => d.party));
   let anyWide = false;
   let anyMove = false;
+  let anyBasic = false;
 
   const body = pull.departures.map((d) => {
     const split = d.single === undefined ? null : d.single * seats;
@@ -216,11 +235,21 @@ function renderLatestPull(card, route, rows, runs) {
       d.stops === null ? "&mdash;" : d.stops === 0 ? "nonstop" : `${d.stops} stop${d.stops > 1 ? "s" : ""}`;
     const move = d.prev === undefined ? null : d.party - d.prev;
     if (move !== null) anyMove = true;
+    const notes = d.fare_notes || "";
+    const basic = RESTRICTED.test(notes);
+    if (basic) anyBasic = true;
+    const depart = fmtDay(d.depart);
+    // The stored URL is the six-seat search that produced this fare, so the
+    // link lands on the party price rather than the one-adult one Google shows
+    // by default.
+    const departCell = d.booking_url
+      ? `<a href="${esc(d.booking_url)}" target="_blank" rel="noopener noreferrer">${depart}</a>`
+      : depart;
     const classes = [];
     if (d.party <= route.threshold_usd) classes.push("beats");
     if (d.party === cheapest) classes.push("best");
     return `<tr class="${classes.join(" ")}">
-      <td>${fmtDay(d.depart)}</td>
+      <td>${departCell}</td>
       <td>${d.return_date ? fmtDay(d.return_date) : "one way"}</td>
       <td>${money(d.party, route.currency)}</td>
       <td class="${move === null || move === 0 ? "" : move < 0 ? "down" : "up"}">${
@@ -233,6 +262,9 @@ function renderLatestPull(card, route, rows, runs) {
       }</td>
       <td>${d.carrier || "&mdash;"}</td>
       <td>${stops}</td>
+      <td class="${basic ? "up" : ""}"${notes ? ` title="${esc(notes)}"` : ""}>${
+        basic ? "Basic?" : notes ? "&middot;&middot;&middot;" : "&mdash;"
+      }</td>
     </tr>`;
   }).join("");
 
@@ -247,9 +279,16 @@ function renderLatestPull(card, route, rows, runs) {
       <thead><tr>
         <th>Depart</th><th>Return</th><th>Party fare</th><th>Since last pull</th>
         <th>${seats} &times; single</th><th>Spread</th><th>Carrier</th><th>Stops</th>
+        <th>Fare</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table></div>
+    ${anyBasic
+      ? `<p class="legend warn">A fare marked <strong>Basic?</strong> carries an
+         attribute like "carry-on bag not included". Google publishes no fare
+         brand here, so this is inference from what it does say &mdash; check the
+         booking page before assuming six seats together and bags included.</p>`
+      : ""}
     <p class="legend">${
       anyWide
         ? "A wide spread means the cheap fare bucket no longer holds all " + seats +

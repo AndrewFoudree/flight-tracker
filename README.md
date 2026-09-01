@@ -388,7 +388,7 @@ Actions -> Survey a year of fares -> Run workflow
 `data/prices.csv` is append-only, one row per route per source per run:
 
 ```
-observed_at,route_id,source,origin,destination,depart_date,return_date,adults,children,infants,total_price,currency,carrier,stops,booking_url
+observed_at,route_id,source,origin,destination,depart_date,return_date,adults,children,infants,total_price,currency,carrier,stops,booking_url,fare_notes
 ```
 
 History is never rewritten. A correction goes in as a new row with a later
@@ -402,6 +402,12 @@ comparison forever.
 Two smaller files sit alongside it:
 
 - `data/usage.csv` - API searches consumed, for the budget guard.
+- `fare_notes` holds Google's own attribute strings for a fare, such as
+  `Carry-on bag not included`. The search response has no fare-brand field -- the
+  Booking Options endpoint has one and costs a search per itinerary -- so these
+  strings are the only free signal that a quote is Basic Economy. The dashboard
+  flags a fare as `Basic?` on that basis and shows the raw text on hover, because
+  it is an inference and should be checkable.
 - `data/routes.json` - current route metadata, rewritten each run so the dashboard
   can read `prices.csv` without a build step.
 

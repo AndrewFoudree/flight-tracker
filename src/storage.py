@@ -36,6 +36,7 @@ PRICE_COLUMNS: Sequence[str] = (
     "carrier",
     "stops",
     "booking_url",
+    "fare_notes",
 )
 
 # API-search accounting lives beside the price history rather than inside it,
@@ -68,6 +69,7 @@ class PriceRow:
     carrier: str | None
     stops: int | None
     booking_url: str | None
+    fare_notes: str | None = None
 
     def is_group(self, passengers: Passengers) -> bool:
         return (
@@ -113,6 +115,7 @@ def quote_to_row(quote: Quote, origin: str, destination: str) -> dict[str, str]:
         "carrier": quote.carrier or "",
         "stops": "" if quote.stops is None else str(quote.stops),
         "booking_url": quote.booking_url or "",
+        "fare_notes": quote.fare_notes or "",
     }
 
 
@@ -168,6 +171,9 @@ def read_history(path: Path = PRICES_PATH) -> list[PriceRow]:
                         carrier=_opt(raw["carrier"]),
                         stops=int(raw["stops"]) if _opt(raw["stops"]) else None,
                         booking_url=_opt(raw["booking_url"]),
+                        # .get, not [], so rows written before the column
+                        # existed still parse instead of failing the run.
+                        fare_notes=_opt(raw.get("fare_notes") or ""),
                     )
                 )
             except (KeyError, TypeError, ValueError) as exc:

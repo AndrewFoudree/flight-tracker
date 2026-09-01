@@ -37,7 +37,8 @@ def test_header_matches_the_documented_schema(tmp_path):
     header = path.read_text(encoding="utf-8").splitlines()[0]
     assert header == (
         "observed_at,route_id,source,origin,destination,depart_date,return_date,"
-        "adults,children,infants,total_price,currency,carrier,stops,booking_url"
+        "adults,children,infants,total_price,currency,carrier,stops,booking_url,"
+        "fare_notes"
     )
 
 
@@ -131,3 +132,20 @@ def test_zero_searches_are_not_recorded(tmp_path):
 
 def test_usage_of_an_untouched_source_is_zero(tmp_path):
     assert storage.searches_used("serpapi", NOW, tmp_path / "nope.csv") == 0
+
+
+def test_a_row_written_before_fare_notes_existed_still_parses(tmp_path):
+    """prices.csv is append-only history. A new column must not make the run
+    fail on every row recorded before it was added."""
+    path = tmp_path / "prices.csv"
+    path.write_text(
+        "observed_at,route_id,source,origin,destination,depart_date,return_date,"
+        "adults,children,infants,total_price,currency,carrier,stops,booking_url\n"
+        "2026-08-31T13:00:00Z,dsm-mco-spring,serpapi,DSM,MCO,2027-03-14,2027-03-21,"
+        "2,4,1,2955.00,USD,American,2,\n",
+        encoding="utf-8",
+    )
+    rows = storage.read_history(path)
+    assert len(rows) == 1
+    assert rows[0].fare_notes is None
+    assert rows[0].total_price == 2955.0

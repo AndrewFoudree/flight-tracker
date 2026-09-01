@@ -82,6 +82,26 @@ class SerpApiFetcher(Fetcher):
 
     # --- parsing ----------------------------------------------------------
 
+    @staticmethod
+    def _fare_notes(itinerary: dict, legs: list) -> str | None:
+        """Google's attribute strings for this fare, option level and per leg.
+
+        Deduplicated in first-seen order rather than sorted, because Google puts
+        the restrictive ones first and that ordering is worth keeping. Absent on
+        many results, which is not an error: it means Google said nothing, not
+        that the fare is unrestricted.
+        """
+        seen: list[str] = []
+        sources = [itinerary.get("extensions")] + [leg.get("extensions") for leg in legs]
+        for group in sources:
+            if not isinstance(group, list):
+                continue
+            for note in group:
+                text = str(note).strip()
+                if text and text not in seen:
+                    seen.append(text)
+        return "; ".join(seen) or None
+
     def _parse(self, payload: dict, route, passengers, depart, return_date) -> list[Quote]:
         itineraries = list(payload.get("best_flights") or []) + list(payload.get("other_flights") or [])
         if not itineraries:
@@ -102,6 +122,7 @@ class SerpApiFetcher(Fetcher):
                 raise FetcherError(f"serpapi: non-numeric price {price!r} for {route.id}")
             legs = itinerary.get("flights") or []
             carrier = legs[0].get("airline") if legs else None
+            fare_notes = self._fare_notes(itinerary, legs)
             layovers = itinerary.get("layovers")
             stops = len(layovers) if isinstance(layovers, list) else (len(legs) - 1 if legs else None)
             quotes.append(
@@ -123,6 +144,7 @@ class SerpApiFetcher(Fetcher):
                     stops=stops,
                     booking_url=booking_url,
                     raw_response_hash=digest,
+                    fare_notes=fare_notes,
                 )
             )
         return quotes
