@@ -42,3 +42,5 @@ observed_at,source,route_id,searches
 2026-09-01T16:07:36Z,travelpayouts,dsm-sju-jan-thursdays,1
 2026-09-01T16:07:36Z,travelpayouts,dsm-stt-apr-may-thursdays,2
 2026-09-01T16:07:36Z,travelpayouts,dsm-sju-apr-may-thursdays,2
+2026-09-01T16:40:41Z,serpapi,dsm-sju-jan-thursdays,4
+2026-09-01T16:40:41Z,travelpayouts,dsm-sju-jan-thursdays,1

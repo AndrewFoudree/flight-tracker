@@ -1,4 +1,9 @@
 {
+  "dsm-sju-jan-thursdays": {
+    "cooldown_days": 7,
+    "last_alerted_at": "2026-09-01T16:40:41Z",
+    "last_alerted_price": 2796.0
+  },
   "dsm-stt-jan": {
     "cooldown_days": 7,
     "last_alerted_at": "2026-08-31T20:19:44Z",
