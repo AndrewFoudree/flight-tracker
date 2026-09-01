@@ -1,6 +1,8 @@
-/* Reads data/prices.csv and data/routes.json at load and renders one chart per
-   route. No build step: the price workflow commits both files weekly, and Pages
-   republishes them. */
+/* Reads data/prices.csv, data/routes.json and data/runs.csv at load and renders
+   one chart per route. No build step: the price workflow commits those files
+   weekly, and Pages republishes them. Every one of them has to be staged into
+   _site/data by the deploy step, or it 404s here and the page quietly loses
+   whatever it carried -- runs.csv is what draws the NA gaps. */
 
 const CANDIDATES = ["data/", "../data/"]; // deployed layout, then local checkout
 

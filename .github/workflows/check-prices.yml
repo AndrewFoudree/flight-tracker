@@ -81,6 +81,9 @@ jobs:
           mkdir -p _site/data
           cp dashboard/* _site/
           cp data/prices.csv data/routes.json _site/data/
+          # Optional, and separate so a missing one never masks a missing price
+          # file: runs.csv does not exist until the first run records an outcome.
+          cp data/runs.csv _site/data/ 2>/dev/null || true
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
