@@ -10,7 +10,7 @@ on:
   workflow_dispatch:        # manual trigger for testing
     inputs:
       route:
-        description: "Limit to one route id (blank runs all)"
+        description: "Limit to these route ids, comma separated (blank runs all)"
         required: false
       dry_run:
         description: "Analyse stored history without calling any API"
@@ -46,10 +46,22 @@ jobs:
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ROUTES: ${{ inputs.route }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          python -m src.main \
-            ${{ inputs.route && format('--route {0}', inputs.route) || '' }} \
-            ${{ inputs.dry_run && '--dry-run' || '' }}
+          # main.py takes --route repeatably; expanding the input here is what
+          # makes that reachable. Built as a list rather than interpolated into
+          # the command so a route id can never become shell.
+          args=""
+          if [ -n "$ROUTES" ]; then
+            IFS=','
+            for route in $ROUTES; do
+              if [ -n "$route" ]; then args="$args --route $route"; fi
+            done
+            unset IFS
+          fi
+          if [ "$DRY_RUN" = "true" ]; then args="$args --dry-run"; fi
+          python -m src.main $args
 
       - name: Commit results
         if: always()          # keep partial data even when the fetch reports failure
