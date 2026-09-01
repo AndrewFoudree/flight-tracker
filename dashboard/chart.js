@@ -181,7 +181,7 @@ function renderLatestPull(card, route, rows, runs) {
     const section = document.createElement("div");
     section.className = "pull";
     section.innerHTML = `
-      <h3>Most recent pull</h3>
+      <h3>Most recent pull &middot; ${patternLabel(route)}</h3>
       <p class="when">Checked ${fmtDay(newest.observed_at.slice(0, 10))}</p>
       <p class="na-box"><strong>NA &mdash; no data returned.</strong> ${
         newest.note || newest.status
@@ -228,7 +228,7 @@ function renderLatestPull(card, route, rows, runs) {
   const section = document.createElement("div");
   section.className = "pull";
   section.innerHTML = `
-    <h3>${newest && newest.status !== "ok" ? "Last successful pull" : "Most recent pull"}</h3>
+    <h3>${newest && newest.status !== "ok" ? "Last successful pull" : "Most recent pull"} &middot; ${patternLabel(route)}</h3>
     <p class="when">Checked ${fmtDay(pull.day)} &middot; ${pull.departures.length} departure(s) priced${
       anyMove ? "" : " &middot; first pull for these departures, so nothing to compare against yet"
     }</p>
@@ -255,78 +255,135 @@ function fmtDay(iso) {
   });
 }
 
-function renderRoute(container, route, rows, runs) {
-  const priced = dailyMinimum(partyRows(rows, route));
-  const naDays = naDaysFor(runs, route.id);
-  const series = mergeSeries(priced, naDays);
+/* One card per origin-destination-month, not per route. Saturday and Thursday
+   are two ways of buying the same trip, and reading them off two charts on two
+   axes is how you miss that one is $250 cheaper. They stay separate series
+   rather than one merged line: a Sat->Sat 7-night fare and a Thu->Tue 5-night
+   fare are different products, and averaging them would invent a price nobody
+   was ever quoted. */
+const SERIES_COLORS = ["#5aa9e6", "#7bc47f"];
+
+function patternLabel(route) {
+  if (!route.window) return route.depart ? `${route.depart} departure` : route.id;
+  const [y, m, d] = route.window.earliest.split("-").map(Number);
+  const weekday = new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString(undefined, { weekday: "long", timeZone: "UTC" });
+  return `${weekday} departures, ${route.window.nights} nights`;
+}
+
+/* Month of the first departure, so the two weekday patterns of one trip land
+   together without needing a naming convention in the route ids. */
+function groupKey(route) {
+  const anchor = route.window ? route.window.earliest : route.depart;
+  return `${route.origin}|${route.destination}|${anchor.slice(0, 7)}`;
+}
+
+function groupRoutes(routes) {
+  const groups = new Map();
+  for (const route of routes) {
+    const key = groupKey(route);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(route);
+  }
+  return [...groups.values()];
+}
+
+function groupWindow(routes) {
+  const edges = (pick) => routes.map(pick).filter(Boolean).sort();
+  const first = edges((r) => (r.window ? r.window.earliest : r.depart))[0];
+  const last = edges((r) => (r.window ? r.window.latest : r.depart)).pop();
+  return first === last ? first : `${first} to ${last}`;
+}
+
+function renderGroup(container, routes, rows, runs) {
+  const lead = routes[0];
   const card = document.createElement("section");
   card.className = "route";
+  const party = `${lead.adults}a ${lead.children}c ${lead.infants}i`;
 
-  if (!priced.length) {
-    card.innerHTML = `<header><h2>${route.origin} &rarr; ${route.destination}
-      <small>${route.id}</small></h2></header>
+  const tracks = routes.map((route) => {
+    const priced = dailyMinimum(partyRows(rows, route));
+    const naDays = naDaysFor(runs, route.id);
+    return { route, priced, naDays, series: mergeSeries(priced, naDays) };
+  });
+  const withData = tracks.filter((t) => t.priced.length);
+
+  if (!withData.length) {
+    card.innerHTML = `<header><h2>${lead.origin} &rarr; ${lead.destination}
+      <small>${groupWindow(routes)} &middot; ${party}</small></h2></header>
       <p class="note">No whole-party observations recorded yet.</p>`;
     container.appendChild(card);
+    for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
     return;
   }
 
-  const values = series.filter(([, v]) => v !== null);
-  const latest = values[values.length - 1][1];
-  const cheapest = Math.min(...values.map(([, v]) => v));
-  const recent = values.slice(-30);
+  // Every day any pattern in the group was observed, so both share one x axis
+  // and a point from an earlier pull sits beside a later one instead of being
+  // stranded on a chart of its own.
+  const labels = [...new Set(tracks.flatMap((t) => t.series.map(([day]) => day)))].sort();
+  const observed = withData.flatMap((t) => t.series.filter(([, v]) => v !== null));
+  const newestDay = observed.map(([day]) => day).sort().pop();
+  const latest = Math.min(...observed.filter(([day]) => day === newestDay).map(([, v]) => v));
+  const cheapest = Math.min(...observed.map(([, v]) => v));
+  const recentDays = new Set([...new Set(observed.map(([day]) => day))].sort().slice(-30));
+  const recent = observed.filter(([day]) => recentDays.has(day));
   const average = recent.reduce((sum, [, v]) => sum + v, 0) / recent.length;
-  const party = `${route.adults}a ${route.children}c ${route.infants}i`;
+  const naCount = tracks.reduce((n, t) => n + t.naDays.size, 0);
 
   card.innerHTML = `
     <header>
-      <h2>${route.origin} &rarr; ${route.destination}
-        <small>${describe(route)} &middot; ${party}</small></h2>
+      <h2>${lead.origin} &rarr; ${lead.destination}
+        <small>${groupWindow(routes)} &middot; ${party}</small></h2>
       <div class="stats">
-        ${statBlock("Latest", money(latest, route.currency),
-                    latest <= route.threshold_usd ? "under" : "over")}
-        ${statBlock("Cheapest seen", money(cheapest, route.currency))}
-        ${statBlock("30-day average", money(average, route.currency))}
-        ${statBlock("Threshold", money(route.threshold_usd, route.currency))}
+        ${statBlock("Latest", money(latest, lead.currency),
+                    latest <= lead.threshold_usd ? "under" : "over")}
+        ${statBlock("Cheapest seen", money(cheapest, lead.currency))}
+        ${statBlock("30-day average", money(average, lead.currency))}
+        ${statBlock("Threshold", money(lead.threshold_usd, lead.currency))}
       </div>
     </header>
     <div class="chart"><canvas></canvas></div>
-    <p class="note">${values.length} day(s) of history &middot; tracking since ${series[0][0]}${
-      naDays.size ? ` &middot; <span class="na">${naDays.size} day(s) with no data</span>` : ""
+    <p class="note">${labels.length} day(s) of history &middot; tracking since ${labels[0]}${
+      naCount ? ` &middot; <span class="na">${naCount} route-day(s) with no data</span>` : ""
     }</p>`;
   container.appendChild(card);
 
   const ink = getComputedStyle(document.body).getPropertyValue("--text").trim();
   const grid = getComputedStyle(document.body).getPropertyValue("--line").trim();
 
-  renderLatestPull(card, route, rows, runs);
+  for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
+
+  const datasets = withData.map((t, i) => ({
+    label: patternLabel(t.route),
+    data: labels.map((day) => {
+      const hit = t.series.find(([d]) => d === day);
+      return hit ? hit[1] : null;
+    }),
+    spanGaps: false,                      // a blind day breaks the line
+    borderColor: SERIES_COLORS[i % SERIES_COLORS.length],
+    backgroundColor: "transparent",
+    fill: false, tension: .25, pointRadius: 3, borderWidth: 2,
+  }));
+  // A trend line only means something against a single series. With two it is
+  // four lines on one chart and reads as noise.
+  if (withData.length === 1) {
+    datasets.push({
+      label: "7-day average",
+      data: movingAverage(withData[0].series, 7),
+      borderColor: "#96a0ad",
+      borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, fill: false,
+    });
+  }
+  datasets.push({
+    label: "Threshold",
+    data: labels.map(() => lead.threshold_usd),
+    borderColor: "#e6a34a",
+    borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, fill: false,
+  });
 
   new Chart(card.querySelector("canvas"), {
     type: "line",
-    data: {
-      labels: series.map(([day]) => day),
-      datasets: [
-        {
-          label: "Cheapest that day",
-          data: series.map(([, price]) => price),
-          spanGaps: false,                    // a blind day breaks the line
-          borderColor: "#5aa9e6",
-          backgroundColor: "rgba(90,169,230,.12)",
-          fill: true, tension: .25, pointRadius: 2, borderWidth: 2,
-        },
-        {
-          label: "7-day average",
-          data: movingAverage(series, 7),
-          borderColor: "#96a0ad",
-          borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, fill: false,
-        },
-        {
-          label: "Threshold",
-          data: series.map(() => route.threshold_usd),
-          borderColor: "#e6a34a",
-          borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, fill: false,
-        },
-      ],
-    },
+    data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
@@ -337,14 +394,14 @@ function renderRoute(container, route, rows, runs) {
             label: (ctx) =>
               ctx.parsed.y === null || ctx.parsed.y === undefined
                 ? `${ctx.dataset.label}: no data`
-                : `${ctx.dataset.label}: ${money(ctx.parsed.y, route.currency)}`,
+                : `${ctx.dataset.label}: ${money(ctx.parsed.y, lead.currency)}`,
           },
         },
       },
       scales: {
         x: { ticks: { color: ink, maxTicksLimit: 10 }, grid: { color: grid } },
         y: {
-          ticks: { color: ink, callback: (v) => money(v, route.currency) },
+          ticks: { color: ink, callback: (v) => money(v, lead.currency) },
           grid: { color: grid },
         },
       },
@@ -376,7 +433,7 @@ async function main() {
     const last = rows[rows.length - 1].observed_at;
     subtitle.textContent =
       `${routes.length} route(s) · ${rows.length} observations · last checked ${last}`;
-    routes.forEach((route) => renderRoute(container, route, rows, runs));
+    groupRoutes(routes).forEach((group) => renderGroup(container, group, rows, runs));
   } catch (error) {
     container.innerHTML = `<div class="error">${error.message}</div>`;
     subtitle.textContent = "";
