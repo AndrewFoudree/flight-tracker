@@ -216,7 +216,10 @@ function renderLatestPull(card, route, rows, runs) {
       d.stops === null ? "&mdash;" : d.stops === 0 ? "nonstop" : `${d.stops} stop${d.stops > 1 ? "s" : ""}`;
     const move = d.prev === undefined ? null : d.party - d.prev;
     if (move !== null) anyMove = true;
-    return `<tr class="${d.party === cheapest ? "best" : ""}">
+    const classes = [];
+    if (d.party <= route.threshold_usd) classes.push("beats");
+    if (d.party === cheapest) classes.push("best");
+    return `<tr class="${classes.join(" ")}">
       <td>${fmtDay(d.depart)}</td>
       <td>${d.return_date ? fmtDay(d.return_date) : "one way"}</td>
       <td>${money(d.party, route.currency)}</td>
@@ -337,19 +340,24 @@ function renderGroup(container, routes, rows, runs) {
   const recent = observed.filter(([day]) => recentDays.has(day));
   const average = recent.reduce((sum, [, v]) => sum + v, 0) / recent.length;
   const naCount = tracks.reduce((n, t) => n + t.naDays.size, 0);
+  const beats = latest <= lead.threshold_usd;
+  if (beats) card.classList.add("beats");
 
   card.innerHTML = `
     <header>
       <h2>${lead.origin} &rarr; ${lead.destination}
         <small>${groupWindow(routes)} &middot; ${party}</small></h2>
       <div class="stats">
-        ${statBlock("Latest", money(latest, lead.currency),
-                    latest <= lead.threshold_usd ? "under" : "over")}
+        ${statBlock("Latest", money(latest, lead.currency), beats ? "under" : "over")}
         ${statBlock("Cheapest seen", money(cheapest, lead.currency))}
         ${statBlock("30-day average", money(average, lead.currency))}
         ${statBlock("Threshold", money(lead.threshold_usd, lead.currency))}
       </div>
     </header>
+    ${beats
+      ? `<p class="hit">Under the threshold &mdash; ${money(lead.threshold_usd - latest, lead.currency)}
+         below the ${money(lead.threshold_usd, lead.currency)} bar.</p>`
+      : ""}
     <div class="chart"><canvas></canvas></div>
     <p class="note">${labels.length} day(s) of history &middot; tracking since ${labels[0]}${
       naCount ? ` &middot; <span class="na">${naCount} route-day(s) with no data</span>` : ""

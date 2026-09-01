@@ -71,8 +71,13 @@ routes:
       latest: "2027-01-30"
     nights: 7
     window_step_days: 7
-    threshold_usd: 2800
+    # $2,796 is San Juan's bucket floor, hit on three of four January Thursdays
+    # by two carriers on 2026-09-01. A bar at $2,800 would fire every week and
+    # mean nothing; $2,700 fires only on a genuine break below the bucket. The
+    # drawn threshold matches the alert bar so the chart and the alert agree.
+    threshold_usd: 2700
     alert_on:
+      - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
     # 5 dates x 2 = 10 a run.
@@ -107,8 +112,13 @@ routes:
       latest: "2027-05-15"
     nights: 7
     window_step_days: 7
-    threshold_usd: 2800
+    # $2,796 is San Juan's bucket floor, hit on three of four January Thursdays
+    # by two carriers on 2026-09-01. A bar at $2,800 would fire every week and
+    # mean nothing; $2,700 fires only on a genuine break below the bucket. The
+    # drawn threshold matches the alert bar so the chart and the alert agree.
+    threshold_usd: 2700
     alert_on:
+      - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
     # 4 dates x 1 = 4 a run.
@@ -144,8 +154,13 @@ routes:
       latest: "2027-01-28"
     nights: 5
     window_step_days: 7
-    threshold_usd: 2800
+    # $2,796 is San Juan's bucket floor, hit on three of four January Thursdays
+    # by two carriers on 2026-09-01. A bar at $2,800 would fire every week and
+    # mean nothing; $2,700 fires only on a genuine break below the bucket. The
+    # drawn threshold matches the alert bar so the chart and the alert agree.
+    threshold_usd: 2700
     alert_on:
+      - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
     # 4 dates x 1 = 4 a run.
@@ -182,8 +197,13 @@ routes:
       latest: "2027-05-13"
     nights: 5
     window_step_days: 7
-    threshold_usd: 2800
+    # $2,796 is San Juan's bucket floor, hit on three of four January Thursdays
+    # by two carriers on 2026-09-01. A bar at $2,800 would fire every week and
+    # mean nothing; $2,700 fires only on a genuine break below the bucket. The
+    # drawn threshold matches the alert bar so the chart and the alert agree.
+    threshold_usd: 2700
     alert_on:
+      - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
     # 4 dates x 1 = 4 a run.

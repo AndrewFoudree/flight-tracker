@@ -43,7 +43,8 @@
     .stat .k { display: block; color: var(--muted); font-size: .72rem;
                text-transform: uppercase; letter-spacing: .06em; }
     .stat .v { font-variant-numeric: tabular-nums; font-weight: 600; }
-    .v.under { color: var(--good); }
+    .v.under { color: var(--good); background: color-mix(in srgb, var(--good) 18%, transparent);
+               border-radius: 999px; padding: .1rem .55rem; margin-right: -.55rem; }
     .v.over { color: var(--warn); }
     .chart { position: relative; height: 300px; }
     .note { color: var(--muted); font-size: .82rem; margin-top: .85rem; }
@@ -61,12 +62,21 @@
                border-bottom: 1px solid var(--line); }
     tbody tr + tr td { border-top: 1px solid var(--line); }
     tbody tr.best td { background: color-mix(in srgb, var(--good) 12%, transparent); }
-    tbody tr.best td:first-child::after { content: " 90 cheapest"; color: var(--good);
+    /* Under the bar is the whole point of the tracker, so it outranks
+       cheapest-of-this-pull, which is only ever relative. */
+    tbody tr.beats td { background: color-mix(in srgb, var(--good) 26%, transparent);
+                        font-weight: 600; }
+    tbody tr.best td:first-child::after { content: " \2193 cheapest"; color: var(--good);
                                           font-size: .75rem; }
     td.wide { color: var(--warn); font-weight: 600; }
     td.down { color: var(--good); font-weight: 600; }
     td.up { color: var(--warn); font-weight: 600; }
     .legend { color: var(--muted); font-size: .78rem; margin: .7rem 0 0; }
+    .route.beats { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
+    .hit { margin: .7rem 0 0; padding: .5rem .7rem; font-size: .85rem; font-weight: 600;
+           color: var(--good); border-radius: 4px;
+           background: color-mix(in srgb, var(--good) 14%, transparent);
+           border-left: 3px solid var(--good); }
     .na { color: var(--warn); }
     .na-box { background: color-mix(in srgb, var(--warn) 12%, transparent);
               border-left: 3px solid var(--warn); border-radius: 4px;
