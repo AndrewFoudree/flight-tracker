@@ -107,7 +107,9 @@ function describe(route) {
   return "";
 }
 
-/* Everything observed on the most recent day we checked. */
+/* Everything observed on the most recent day we checked, plus what the same
+   departure cost on the pull before it. The chart answers "is this route moving";
+   this answers "which departure moved", which is the one you act on. */
 function latestPull(rows, route) {
   const mine = rows.filter((r) => r.route_id === route.id);
   if (!mine.length) return null;
@@ -120,6 +122,19 @@ function latestPull(rows, route) {
     Number(r.infants) === route.infants;
   const isSingle = (r) =>
     Number(r.adults) === 1 && Number(r.children) === 0 && Number(r.infants) === 0;
+
+  // departure -> day -> cheapest party fare, so the previous pull is a lookup
+  // rather than a rescan. Keyed by day because a run writes several rows.
+  const partyHistory = new Map();
+  for (const row of mine) {
+    if (!isParty(row)) continue;
+    const price = Number(row.total_price);
+    if (!Number.isFinite(price)) continue;
+    if (!partyHistory.has(row.depart_date)) partyHistory.set(row.depart_date, new Map());
+    const days = partyHistory.get(row.depart_date);
+    const seen = row.observed_at.slice(0, 10);
+    if (!days.has(seen) || price < days.get(seen)) days.set(seen, price);
+  }
 
   const byDeparture = new Map();
   for (const row of todays) {
@@ -139,6 +154,18 @@ function latestPull(rows, route) {
       entry.single = price;
     }
   }
+  // The previous pull is the last day before this one that priced this exact
+  // departure -- not simply the day before, which may have been an NA or may
+  // never have covered this date at all.
+  for (const entry of byDeparture.values()) {
+    const days = partyHistory.get(entry.depart);
+    if (!days) continue;
+    const earlier = [...days.keys()].filter((d) => d < day).sort().pop();
+    if (earlier === undefined) continue;
+    entry.prev = days.get(earlier);
+    entry.prevDay = earlier;
+  }
+
   const departures = [...byDeparture.values()]
     .filter((e) => e.party !== undefined)
     .sort((a, b) => a.depart.localeCompare(b.depart));
@@ -168,6 +195,7 @@ function renderLatestPull(card, route, rows, runs) {
   const seats = route.adults + route.children;          // a lap infant buys no seat
   const cheapest = Math.min(...pull.departures.map((d) => d.party));
   let anyWide = false;
+  let anyMove = false;
 
   const body = pull.departures.map((d) => {
     const split = d.single === undefined ? null : d.single * seats;
@@ -178,10 +206,16 @@ function renderLatestPull(card, route, rows, runs) {
     if (wide) anyWide = true;
     const stops =
       d.stops === null ? "&mdash;" : d.stops === 0 ? "nonstop" : `${d.stops} stop${d.stops > 1 ? "s" : ""}`;
+    const move = d.prev === undefined ? null : d.party - d.prev;
+    if (move !== null) anyMove = true;
     return `<tr class="${d.party === cheapest ? "best" : ""}">
       <td>${fmtDay(d.depart)}</td>
       <td>${d.return_date ? fmtDay(d.return_date) : "one way"}</td>
       <td>${money(d.party, route.currency)}</td>
+      <td class="${move === null || move === 0 ? "" : move < 0 ? "down" : "up"}">${
+        move === null ? "&mdash;" : move === 0 ? "no change"
+          : (move > 0 ? "+" : "") + money(move, route.currency)
+      }</td>
       <td>${split === null ? "&mdash;" : money(split, route.currency)}</td>
       <td class="${wide ? "wide" : ""}">${
         spread === null ? "&mdash;" : (spread >= 0 ? "+" : "") + money(spread, route.currency)
@@ -195,10 +229,12 @@ function renderLatestPull(card, route, rows, runs) {
   section.className = "pull";
   section.innerHTML = `
     <h3>${newest && newest.status !== "ok" ? "Last successful pull" : "Most recent pull"}</h3>
-    <p class="when">Checked ${fmtDay(pull.day)} &middot; ${pull.departures.length} departure(s) priced</p>
+    <p class="when">Checked ${fmtDay(pull.day)} &middot; ${pull.departures.length} departure(s) priced${
+      anyMove ? "" : " &middot; first pull for these departures, so nothing to compare against yet"
+    }</p>
     <div class="scroll"><table>
       <thead><tr>
-        <th>Depart</th><th>Return</th><th>Party fare</th>
+        <th>Depart</th><th>Return</th><th>Party fare</th><th>Since last pull</th>
         <th>${seats} &times; single</th><th>Spread</th><th>Carrier</th><th>Stops</th>
       </tr></thead>
       <tbody>${body}</tbody>
