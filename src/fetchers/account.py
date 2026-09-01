@@ -43,9 +43,13 @@ def searches_left(api_key: str | None = None, session=None) -> int | None:
     for field in ("total_searches_left", "plan_searches_left"):
         value = body.get(field)
         if isinstance(value, (int, float)):
+            # this_month_usage is the provider's own cycle-to-date count. Logging it
+            # beside the local ledger is what makes "has the plan renewed yet?"
+            # answerable from a run log instead of inferred from arithmetic.
             log.info(
-                "account: %s of %s searches left this cycle (%s)",
-                int(value), body.get("searches_per_month", "?"), body.get("plan_name", "?"),
+                "account: %s of %s searches left this cycle, %s used so far (%s)",
+                int(value), body.get("searches_per_month", "?"),
+                body.get("this_month_usage", "?"), body.get("plan_name", "?"),
             )
             return int(value)
     log.warning("account: no searches-left field in the response, using the local ledger")
