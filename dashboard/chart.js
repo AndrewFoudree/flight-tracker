@@ -76,10 +76,18 @@ function movingAverage(series, window) {
 /* Days the tracker ran but got nothing. Drawn as gaps rather than dropped, so a
    blind stretch is visible instead of looking like flat prices. */
 function naDaysFor(runs, routeId) {
+  const mine = runs.filter((r) => r.route_id === routeId);
+  // A day is only blind if nothing succeeded on it. A route can run twice in a
+  // day -- an NA when the allowance ran short, then an ok on a re-run -- and
+  // counting the failure alone reports a day with data as a day without.
+  const answered = new Set(
+    mine.filter((r) => r.status === "ok").map((r) => r.observed_at.slice(0, 10))
+  );
   return new Set(
-    runs
-      .filter((r) => r.route_id === routeId && r.status !== "ok")
+    mine
+      .filter((r) => r.status !== "ok")
       .map((r) => r.observed_at.slice(0, 10))
+      .filter((day) => !answered.has(day))
   );
 }
 
