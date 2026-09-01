@@ -19,25 +19,172 @@ defaults:
 budget:
   serpapi_monthly_searches: 250
   reserve: 20            # stop before hitting zero
+  # Worst case is a month holding five Saturdays: 44 searches a run x 5 = 220,
+  # inside the 230 spendable. Sized to fit every month, not the average one, so
+  # a five-Saturday month cannot quietly run the plan dry. Two destinations at
+  # full parity would be 68 a run and 340 a month, which does not fit, so the
+  # single-adult probe is spent only where a booking is most likely: see the
+  # January Saturday routes below.
 
 routes:
+  # Order is load-bearing. When a cycle runs short the guard funds routes in the
+  # order they appear and records NA for the rest, so the grid is ordered by how
+  # much is riding on each cell: Saturday before Thursday, January before the
+  # shoulder, and the two destinations paired at every level so a short cycle
+  # degrades both alike instead of blinding one of them.
+
+  # Caribbean leisure capacity runs on a Saturday turnaround, so the cheap bucket
+  # should be deepest Sat -> Sat. The survey backs this for January: Saturday was
+  # the best day of the month, 4 of 5 on the $2,955 floor against Thursday's 3 of
+  # 4. Pooled over the whole year Saturday ranks near the bottom, so this is a
+  # January effect, not a general one -- which is why it runs beside the Thursday
+  # route rather than replacing it. Both legs land on the turnaround: 7 nights.
+  # This is the likeliest route to be booked, so it keeps the single-adult probe.
+  - id: dsm-stt-jan-saturdays
+    origin: DSM
+    destination: STT
+    depart_window:
+      earliest: "2027-01-02"
+      latest: "2027-01-30"
+    nights: 7
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 5 dates x 2 = 10 a run.
+    compare_split_booking: true
+
+  # San Juan, the same window and shape as the St. Thomas route above so the two
+  # destinations are read side by side. No survey has ever run on SJU, so nothing
+  # here is evidence-led yet; it keeps the probe for the same reason STT does.
+  # SJU is a far larger airport with mainland capacity STT does not have, which is
+  # exactly the six-seats-in-one-bucket problem this tracker exists to measure.
+  # No absolute_below until there is a baseline: the $2,800 bar is calibrated to
+  # the STT floor and would either fire every week here or never.
+  - id: dsm-sju-jan-saturdays
+    origin: DSM
+    destination: SJU
+    depart_window:
+      earliest: "2027-01-02"
+      latest: "2027-01-30"
+    nights: 7
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 5 dates x 2 = 10 a run.
+    compare_split_booking: true
+
+  # The same turnaround test on the shoulder window. No survey evidence here --
+  # only one Saturday was ever sampled (May 1, $3,165, off the floor) -- so this
+  # is the capacity argument on trial. Party fare only: the probe is what got cut
+  # to fit two destinations, and it is worth least on an exploratory window.
+  - id: dsm-stt-apr-may-saturdays
+    origin: DSM
+    destination: STT
+    depart_window:
+      earliest: "2027-04-24"
+      latest: "2027-05-15"
+    nights: 7
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 4 dates x 1 = 4 a run.
+    compare_split_booking: false
+
+  # San Juan on the shoulder window. Party fare only, as above.
+  - id: dsm-sju-apr-may-saturdays
+    origin: DSM
+    destination: SJU
+    depart_window:
+      earliest: "2027-04-24"
+      latest: "2027-05-15"
+    nights: 7
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 4 dates x 1 = 4 a run.
+    compare_split_booking: false
+
   # January was the cheapest month of the year: median $2,970 against $3,058 to
   # $3,201 elsewhere, and the most days sitting on the $2,955 floor. Thu -> Tue
   # is 5 nights; the window steps 7 days so it lands on all four January
-  # Thursdays and nothing else.
+  # Thursdays and nothing else. Party fare only now -- Saturday out-floors it in
+  # January, so the probe follows the Saturday route.
   - id: dsm-stt-jan-thursdays
     origin: DSM
-    destination: STT   # St. Thomas, US Virgin Islands
+    destination: STT
     depart_window:
-      earliest: "2027-01-07"   # first Thursday
-      latest: "2027-01-28"     # last Thursday
-    nights: 5                  # Thursday -> Tuesday
-    window_step_days: 7        # Thursdays only: Jan 7, 14, 21, 28
-    threshold_usd: 2800        # below the observed floor, so an alert means something
+      earliest: "2027-01-07"
+      latest: "2027-01-28"
+    nights: 5
+    window_step_days: 7
+    threshold_usd: 2800
     alert_on:
-      - absolute_below: 2800   # a genuine break below the floor
+      - absolute_below: 2800
       - lowest_in_days: 30
       - percent_drop: 5
-    # Both searches on every departure: 4 dates x 2 = 8 a run. At every-other-day
-    # that is 128 a month, inside the 230 cap. Daily would be 248 and overrun it.
-    compare_split_booking: true
+    # 4 dates x 1 = 4 a run.
+    compare_split_booking: false
+
+  # San Juan, January midweek. Party fare only, as above.
+  - id: dsm-sju-jan-thursdays
+    origin: DSM
+    destination: SJU
+    depart_window:
+      earliest: "2027-01-07"
+      latest: "2027-01-28"
+    nights: 5
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 4 dates x 1 = 4 a run.
+    compare_split_booking: false
+
+  # A second look at the shoulder season. The year survey put April's median at
+  # $2,985, level with January, and late April sat on the $2,955 floor on four of
+  # five sampled departures; early May is patchier ($3,120 median) but May 4 and
+  # May 11 both hit the floor.
+  - id: dsm-stt-apr-may-thursdays
+    origin: DSM
+    destination: STT
+    depart_window:
+      earliest: "2027-04-22"
+      latest: "2027-05-13"
+    nights: 5
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 4 dates x 1 = 4 a run.
+    compare_split_booking: false
+
+  # San Juan, shoulder midweek. The thinnest cell in the grid: new destination,
+  # secondary window, weakest weekday. First to lose its searches to a short
+  # cycle, and the first thing to cut if the plan ever needs the headroom.
+  - id: dsm-sju-apr-may-thursdays
+    origin: DSM
+    destination: SJU
+    depart_window:
+      earliest: "2027-04-22"
+      latest: "2027-05-13"
+    nights: 5
+    window_step_days: 7
+    threshold_usd: 2800
+    alert_on:
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 4 dates x 1 = 4 a run.
+    compare_split_booking: false

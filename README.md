@@ -1,6 +1,6 @@
 # Flight price tracker
 
-A GitHub Actions cron job that queries flight prices daily, stores the history in
+A GitHub Actions cron job that queries flight prices weekly, stores the history in
 this repo, alerts on threshold breaches, and publishes a static dashboard.
 
 No servers, no hosting cost. Compute is a scheduled Actions workflow, storage is a
@@ -106,6 +106,12 @@ Consumption is recorded in `data/usage.csv` and the run stops before the cap, so
 the limit is never discovered on the day a fare drops. `budget.reserve` keeps a
 buffer in hand.
 
+The live config spends 44 searches a run. A month can hold five Saturdays, so the
+worst case is 220 against the 230 spendable - sized to fit every month rather
+than the average one. `tests/test_config.py` reads the cron out of the workflow
+and asserts this, so adding a route or changing the cadence fails a test instead
+of quietly overrunning the plan mid-cycle.
+
 Two things multiply the cost, and both are opt-in:
 
 - **`compare_split_booking: true`** doubles a route's SerpAPI cost (party query
@@ -123,6 +129,40 @@ departure, but do not plan a route around it without checking first.
 
 Travelpayouts is unmetered as far as this tracker is concerned and is never
 budget-limited.
+
+## Two destinations
+
+St. Thomas and San Juan are both tracked, on the same two windows and the same
+two weekday patterns - eight routes, a 2x2x2 grid. The dashboard renders them
+identically; nothing there is destination-aware.
+
+Parity is not free. The grid at full coverage - party fare plus single-adult
+probe on all 34 departure dates - is 68 searches a run and 340 a month against a
+230 cap. It does not fit, and the interesting question is what to give up.
+
+**The probe was cut before any departure dates were.** Finding a cheap date needs
+breadth: every date the party fare is checked on is a chance to catch the floor.
+The probe answers a different question - whether the cheap bucket still holds all
+six seats - and that answer moves slowly and transfers across nearby dates in a
+way a fare does not. So both destinations keep every departure date, and the
+probe now runs only on the January Saturday routes, the cell where a booking is
+likeliest. That is 44 a run, 220 in a five-Saturday month.
+
+The alternative, kept here because it is a fair call and easy to swap: halve the
+shoulder windows to two departures each and keep the probe across all of January.
+Same 44 a run, more split-booking detail, less chance of catching a cheap date.
+
+Two things about San Juan specifically:
+
+- **No survey has run on it.** Everything in *How the tracked month was chosen*
+  below is St. Thomas data. The January and April/May windows were inherited so
+  the two destinations are comparable, not because SJU was shown to be cheapest
+  then. Worth a `Survey a year of fares` run on SJU once the plan renews.
+- **It has no `absolute_below` rule.** The $2,800 bar is calibrated to St.
+  Thomas's $2,955 floor. San Juan is a far larger airport with mainland capacity
+  St. Thomas does not have, so that bar would likely either fire every week or
+  never. `lowest_in_days` and `percent_drop` carry the route until a few weeks of
+  history show where its floor actually sits, then the absolute rule goes in.
 
 ## Party of seven: what this handles
 
@@ -247,6 +287,33 @@ Three findings worth keeping:
   early sweep sampled only Tuesdays (a 14-day step from a Tuesday never leaves
   Tuesday) and was worthless for comparison until re-run at a 3-day step, which
   rotates through every weekday.
+- **The Saturday turnaround is a January effect, not a general one.** Caribbean
+  leisure capacity runs Sat -> Sat, which should deepen the cheap bucket. Pooled
+  over the whole year it does not: Saturday's median is $3,282 with 4 of 16 days
+  at the floor, second worst after Friday, while Monday and Tuesday both sit at
+  $2,955. In January, where every date was sampled, it flips - Saturday is the
+  best day of the month at 4 of 5 on the floor, against Thursday's 3 of 4. Both
+  patterns are tracked rather than one being picked, because the shoulder window
+  has almost no Saturday evidence either way (one sample, May 1, off the floor).
+
+| Departure day | n | Median | At the floor | January: at the floor |
+|---|---|---|---|---|
+| Mon | 18 | $2,955 | 10/18 | 2/4 |
+| Tue | 30 | $2,955 | 17/30 | 2/4 |
+| Wed | 17 | $2,985 | 1/17 | 1/4 |
+| Thu | 18 | $3,201 | 7/18 | 3/4 |
+| Fri | 17 | $3,165 | 0/17 | 0/5 |
+| Sat | 16 | $3,282 | 4/16 | **4/5** |
+| Sun | 18 | $3,267 | 4/18 | 2/5 |
+
+**April and May are tracked as a second window.** April ranked level with
+January on the median ($2,985, 5 of 11 sampled days at the floor) and May fifth
+($3,120, 3 of 12). The tracker prices the last two Thursdays in April and the
+first two in May, on the same shape as the January route - 5 nights, party fare
+plus single-adult probe - so the two windows stay directly comparable week to
+week, and a Saturday variant of each window tests the turnaround pattern below.
+Both windows are priced to St. Thomas and to San Juan; see **Two destinations**
+for what that costs and what was traded to afford it.
 
 Trip length was swept the same way, across every January departure:
 
@@ -257,10 +324,11 @@ Trip length was swept the same way, across every January departure:
 
 $2,955 is a fare-bucket floor, not a coincidence: it recurs across six trip
 lengths and roughly 550 quotes. The classic minimum-stay penalty exists but only
-below four nights. Above that, length is free, and so is the day of the week --
-Saturday, Thursday and Tuesday January departures all price identically. Weekday
-departures did beat weekends in March ($372), so the rule is real; it just does
-not discriminate once a date sits on the floor.
+below four nights. Above that, length is free, which is why the Saturday
+routes run 7 nights (Sat -> Sat) at no premium over the Thursday routes' 5. Day
+of week does not discriminate either once a date sits on the floor - Saturday,
+Thursday and Tuesday January floor dates price identically. What it changes is
+how often a date reaches the floor at all, which is the table above.
 
 Re-run the survey when plans change:
 
@@ -291,17 +359,17 @@ Two smaller files sit alongside it:
   can read `prices.csv` without a build step.
 
 At a few tens of thousands of rows, switch to SQLite committed as a binary blob.
-At one route a day that is years away.
+At one route a week that is years away.
 
 ## Dashboard
 
-`dashboard/` is one HTML file and one JS file. The daily price run deploys it
+`dashboard/` is one HTML file and one JS file. The weekly price run deploys it
 itself, as its second job, so the published page always matches the data that run
 committed. `publish-dashboard.yml` covers hand edits to `dashboard/`.
 
 That split is deliberate: **a push made with `GITHUB_TOKEN` does not trigger other
 workflows.** GitHub suppresses those events to prevent recursion, so the bot's
-daily data commit can never fire a separate deploy workflow. Wiring the deploy
+weekly data commit can never fire a separate deploy workflow. Wiring the deploy
 into the same run is what keeps the page from silently freezing while history
 accumulates behind it. The page fetches the CSV at load and parses it
 client-side; Chart.js comes from a CDN. No framework, no build step.
@@ -376,7 +444,7 @@ exists precisely so you do not own that problem.
 - **Cron is not punctual.** Actions queues scheduled jobs; expect anywhere from a
   few minutes to half an hour late. Irrelevant here.
 - **Sixty-day dormancy.** GitHub disables scheduled workflows in repos with no
-  activity for 60 days. The daily commit counts as activity, so this never trips.
+  activity for 60 days. The weekly commit counts as activity, so this never trips.
 
 ## Disclaimer
 

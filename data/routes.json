@@ -1,5 +1,77 @@
 [
   {
+    "id": "dsm-stt-jan-saturdays",
+    "origin": "DSM",
+    "destination": "STT",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-02",
+      "latest": "2027-01-30",
+      "nights": 7
+    }
+  },
+  {
+    "id": "dsm-sju-jan-saturdays",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-02",
+      "latest": "2027-01-30",
+      "nights": 7
+    }
+  },
+  {
+    "id": "dsm-stt-apr-may-saturdays",
+    "origin": "DSM",
+    "destination": "STT",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-04-24",
+      "latest": "2027-05-15",
+      "nights": 7
+    }
+  },
+  {
+    "id": "dsm-sju-apr-may-saturdays",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-04-24",
+      "latest": "2027-05-15",
+      "nights": 7
+    }
+  },
+  {
     "id": "dsm-stt-jan-thursdays",
     "origin": "DSM",
     "destination": "STT",
@@ -14,6 +86,60 @@
     "window": {
       "earliest": "2027-01-07",
       "latest": "2027-01-28",
+      "nights": 5
+    }
+  },
+  {
+    "id": "dsm-sju-jan-thursdays",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-07",
+      "latest": "2027-01-28",
+      "nights": 5
+    }
+  },
+  {
+    "id": "dsm-stt-apr-may-thursdays",
+    "origin": "DSM",
+    "destination": "STT",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-04-22",
+      "latest": "2027-05-13",
+      "nights": 5
+    }
+  },
+  {
+    "id": "dsm-sju-apr-may-thursdays",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2800.0,
+    "currency": "USD",
+    "adults": 2,
+    "children": 4,
+    "infants": 1,
+    "party_size": 7,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-04-22",
+      "latest": "2027-05-13",
       "nights": 5
     }
   }
