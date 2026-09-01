@@ -1,0 +1,82 @@
+name: Hub survey (two tickets)
+
+# One-off, manual only, and deliberately never scheduled. This prices a
+# two-ticket routing through a hub so the saving against the tracked through-fare
+# can be measured rather than argued about. It is a question to answer once, not
+# a series to maintain: the weekly tracker stays single-ticket, and nothing here
+# is written to prices.csv or drawn on the dashboard.
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: "Origin airport"
+        default: "DSM"
+      destination:
+        description: "Final destination"
+        default: "SJU"
+      hubs:
+        description: "Hubs to try routing through (comma separated)"
+        default: "MCO,FLL,MIA"
+      departures:
+        description: "Departure dates to price (comma separated, YYYY-MM-DD)"
+        default: "2027-01-09,2027-01-16,2027-01-23,2027-01-30"
+      nights:
+        description: "Trip length in nights"
+        default: "7"
+      reserve_runs:
+        description: "Scheduled runs to leave funded before spending anything here"
+        default: "4"
+      max_searches:
+        description: "Refuse to run past this many searches"
+        default: "24"
+
+permissions:
+  contents: write
+
+# Never race the weekly check for the same allowance.
+concurrency:
+  group: prices
+  cancel-in-progress: false
+
+jobs:
+  survey:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Price the hub legs
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+        run: |
+          python -m src.hub_survey \
+            --origin "${{ inputs.origin }}" \
+            --destination "${{ inputs.destination }}" \
+            --hubs "${{ inputs.hubs }}" \
+            --departures "${{ inputs.departures }}" \
+            --nights "${{ inputs.nights }}" \
+            --reserve-runs "${{ inputs.reserve_runs }}" \
+            --max-searches "${{ inputs.max_searches }}" \
+            | tee hub-survey-output.txt
+
+      - name: Publish the table to the run summary
+        if: always()
+        run: |
+          echo '## Two tickets through a hub' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat hub-survey-output.txt >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # Runs even on a refusal: the guard spends nothing, so there is nothing to
+      # commit, and commit_data.py is a no-op when the tree is clean.
+      - name: Commit the survey data
+        if: always()
+        run: |
+          git config user.name "flight-bot"
+          git config user.email "flight-bot@users.noreply.github.com"
+          rm -f hub-survey-output.txt
+          python scripts/commit_data.py "hub survey: ${{ inputs.origin }}-${{ inputs.destination }} $(date -u +%Y-%m-%d)"

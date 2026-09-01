@@ -164,6 +164,53 @@ Two things about San Juan specifically:
   never. `lowest_in_days` and `percent_drop` carry the route until a few weeks of
   history show where its floor actually sits, then the absolute rule goes in.
 
+## Budget carriers and the two-ticket question
+
+No low-cost carrier has ever appeared in this data. Across 1,993 quotes the only
+carriers are American, United, Delta and Southwest. That is not a filter on our
+side: `src/fetchers/serpapi.py` sends economy `travel_class` and `deep_search`
+with no carrier restriction and no stops cap.
+
+Two reasons, and neither is fixable by adding an API key:
+
+- **Spirit no longer exists.** It ceased operations on 2 May 2026. It was also
+  the only carrier flying FLL-STT nonstop, which is part of why Caribbean fares
+  sit where they do.
+- **Frontier serves DSM and serves SJU, but not as one network.** Low-cost
+  carriers do not interline, so there is no through-itinerary for Google Flights
+  to return. Their fares can only reach this trip as two separate tickets.
+
+The aggregators that solve this are closed or blind to it. Kiwi's Tequila API is
+the right tool - virtual interlining across 800+ carriers with a missed-connection
+guarantee - and it closed self-serve access in 2024. Amadeus Self-Service excludes
+low-cost carriers outright. Duffel carries Frontier via Travelport with
+self-serve signup and free search inside a 1500:1 search-to-book ratio, which a
+tracker that never books has no bookings to divide into.
+
+So `src/hub_survey.py` answers the question on the key we already have, by
+pricing each leg separately - origin to hub, hub to destination - and comparing
+the total against the through-fare already in `prices.csv`:
+
+```
+Actions -> Hub survey (two tickets) -> Run workflow
+```
+
+Three hubs across four departures is 24 searches. It is **manual only and never
+scheduled**, and it writes to `data/hub_survey.csv` rather than `prices.csv`: a
+two-ticket itinerary is a different product from a through-fare and must not land
+in the same series or the same chart. The weekly tracker stays single-ticket.
+
+It also refuses to run if the spend would starve the scheduled runs. `--reserve-runs`
+(default 4) keeps that many weekly runs funded, and the check reads the balance
+from SerpAPI rather than the local ledger, because the ledger counts calendar
+months while the plan bills on its own renewal date. If the balance cannot be
+read at all, it refuses rather than guessing.
+
+Read the saving as a ceiling. It excludes checked bags for the whole party on a
+carrier that prices them separately, assumes the legs connect on the day, and
+carries no protection whatsoever if the first ticket runs late. Two tickets is
+two contracts.
+
 ## Party of seven: what this handles
 
 ### Passenger counts
