@@ -211,7 +211,7 @@ carrier that prices them separately, assumes the legs connect on the day, and
 carries no protection whatsoever if the first ticket runs late. Two tickets is
 two contracts.
 
-## Party of seven: what this handles
+## Groups with children: what this handles
 
 ### Passenger counts
 
@@ -219,23 +219,41 @@ Adults, children, and infants are passed as separate parameters in a single quer
 The tracker never queries for one passenger and multiplies, because that answer is
 wrong for the reason below.
 
+The split itself is not in this repo. `defaults.passengers.from_env` names an
+environment variable holding `adults,children,infants` -- a repository variable
+in Actions -- and only the seat count is ever written to `prices.csv`, published
+in `routes.json`, or shown on the dashboard. A public price tracker has no reason
+to also publish who is in a household. A missing variable fails the run rather
+than quietly pricing a different party.
+
+```yaml
+defaults:
+  passengers:
+    from_env: PARTY        # "2,4,1" style, set in Actions -> Variables
+```
+
 ### Fare buckets and split booking
 
-Airlines sell seats in priced inventory buckets. A search for seven passengers only
-returns fares where seven seats exist in the *same* bucket. If there are two seats
-at $200 and five at $300, the group search quotes 7 x $300. Booking individually can
+Airlines sell seats in priced inventory buckets. A search for six passengers only
+returns fares where six seats exist in the *same* bucket. If there are two seats
+at $200 and four at $300, the group search quotes 6 x $300. Booking individually can
 capture the cheaper seats.
+
+Observed live on 2026-09-01: DSM-SJU on 28 January quoted $466 a seat for one
+passenger on a 1-stop American routing, but the six-seat search returned $511 a
+seat for the same 1-stop itinerary and found $466 only two stops away. Same day,
+same route, different flight.
 
 With `compare_split_booking: true` the tracker runs a second single-adult query and
 stores both, then compares the party fare against booking each traveller
 separately.
 
-The comparison counts **seats, not people**. Your party of seven occupies six
-seats, because the lap infant does not buy one. Multiplying a single fare by the
-head count would invent a fare nobody pays and hide a real saving:
+The comparison counts **seats, not people**. A lap infant does not buy a seat, so
+a group of seven travellers occupies six. Multiplying a single fare by the head
+count would invent a fare nobody pays and hide a real saving:
 
 ```
-2 adults + 4 children + 1 lap infant, single fare $348
+six seats plus a lap infant, single fare $348
 
 seats  (correct)   6 x 348 = $2,088   ->  $712 below a $2,800 party fare
 people (wrong)     7 x 348 = $2,436   ->  $364, understating the saving by half
@@ -271,9 +289,7 @@ Give the tracker the birth date and it works this out per route:
 ```yaml
 defaults:
   passengers:
-    adults: 2
-    children: 4
-    infants: 1
+    from_env: PARTY
     infant_birthdates: ["2025-05-20"]
 ```
 
@@ -476,7 +492,7 @@ carries on.
 
 **Travelpayouts prices one adult.** Its v3 prices endpoints return cached
 single-adult fares and accept no passenger parameters, so this tracker records them
-as `adults=1` quotes and never as a party total. Multiplying a single fare by seven
+as `adults=1` quotes and never as a party total. Multiplying a single fare by the
 is exactly the fare-bucket error described above. Treat Travelpayouts as a trend
 signal and as the free half of the split-booking comparison; SerpAPI is the source
 of truth for real party pricing.

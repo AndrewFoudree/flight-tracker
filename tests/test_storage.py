@@ -18,8 +18,8 @@ def a_quote(price: float = 2745.0, route_id: str = "dsm-mco-spring") -> Quote:
         observed_at=NOW,
         depart_date=datetime(2027, 3, 14).date(),
         return_date=datetime(2027, 3, 21).date(),
-        adults=2,
-        children=4,
+        adults=3,
+        children=3,
         infants=1,
         total_price=price,
         price_per_adult=None,
@@ -37,8 +37,7 @@ def test_header_matches_the_documented_schema(tmp_path):
     header = path.read_text(encoding="utf-8").splitlines()[0]
     assert header == (
         "observed_at,route_id,source,origin,destination,depart_date,return_date,"
-        "adults,children,infants,total_price,currency,carrier,stops,booking_url,"
-        "fare_notes"
+        "seats,total_price,currency,carrier,stops,booking_url,fare_notes"
     )
 
 
@@ -62,7 +61,7 @@ def test_round_trip_preserves_values(tmp_path):
     assert row.observed_at == NOW
     assert row.observed_at.tzinfo is timezone.utc     # always stored in UTC
     assert row.stops == 1
-    assert row.adults == 2 and row.children == 4 and row.infants == 1
+    assert row.seats == 6          # the split that produced it is not recorded
 
 
 def test_one_way_and_unknown_fields_round_trip_as_none(tmp_path):
@@ -79,7 +78,7 @@ def test_naive_timestamps_are_read_as_utc(tmp_path):
     path = tmp_path / "prices.csv"
     path.write_text(
         ",".join(storage.PRICE_COLUMNS) + "\n"
-        "2026-08-31 13:00:00,r,serpapi,DSM,MCO,2027-03-14,,2,4,1,2745.00,USD,,,\n",
+        "2026-08-31 13:00:00,r,serpapi,DSM,MCO,2027-03-14,,6,2745.00,USD,,,,\n",
         encoding="utf-8",
     )
     (row,) = storage.read_history(path)

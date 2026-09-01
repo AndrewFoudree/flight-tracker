@@ -16,7 +16,7 @@ from src.fetchers.travelpayouts import TravelpayoutsFetcher
 from src.models import Passengers
 from tests.conftest import FakeSession, load_fixture, make_config, make_window_config
 
-PARTY = Passengers(2, 4, 1)
+PARTY = Passengers(3, 3, 1)
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_serpapi_records_party_counts_and_dates():
     config = make_config()
     fetcher = serpapi(config, load_fixture("serpapi_dsm_mco.json"))
     quote = min(fetcher.search(config.routes[0], PARTY), key=lambda q: q.total_price)
-    assert (quote.adults, quote.children, quote.infants) == (2, 4, 1)
+    assert (quote.adults, quote.children, quote.infants) == (3, 3, 1)
     assert quote.depart_date == date(2027, 3, 14)
     assert quote.return_date == date(2027, 3, 21)
     assert quote.carrier == "Delta"
@@ -65,7 +65,7 @@ def test_serpapi_sends_lap_infants_separately_from_children():
     fetcher = SerpApiFetcher(config, api_key="test-key", session=session)
     fetcher.search(config.routes[0], PARTY)
     params = session.calls[0]["params"]
-    assert params["adults"] == 2 and params["children"] == 4
+    assert params["adults"] == 3 and params["children"] == 3
     assert params["infants_on_lap"] == 1 and params["infants_in_seat"] == 0
     assert params["type"] == 1                      # round trip
     assert params["return_date"] == "2027-03-21"
@@ -200,7 +200,7 @@ def test_serpapi_captures_the_fare_attributes_google_returns():
         load_fixture("serpapi_dsm_mco.json"),
         ["Carry-on bag not included", "Checked baggage for a fee"],
     )
-    quotes = serpapi(config, payload).search(config.routes[0], Passengers(2, 4, 1))
+    quotes = serpapi(config, payload).search(config.routes[0], Passengers(3, 3, 1))
     assert quotes[0].fare_notes == "Carry-on bag not included; Checked baggage for a fee"
 
 
@@ -220,7 +220,7 @@ def test_serpapi_keeps_fare_conditions_and_drops_the_amenity_catalogue():
             "Carry-on bag not included",
         ],
     )
-    quotes = serpapi(config, payload).search(config.routes[0], Passengers(2, 4, 1))
+    quotes = serpapi(config, payload).search(config.routes[0], Passengers(3, 3, 1))
     # Deduplicated, option level first, not re-sorted: Google puts the
     # conditions before the amenities and that ordering is the useful part.
     assert quotes[0].fare_notes == (
@@ -232,6 +232,6 @@ def test_serpapi_says_nothing_rather_than_nothing_known():
     """No extensions means Google said nothing, not that the fare is unrestricted."""
     config = make_config()
     quotes = serpapi(config, load_fixture("serpapi_dsm_mco.json")).search(
-        config.routes[0], Passengers(2, 4, 1)
+        config.routes[0], Passengers(3, 3, 1)
     )
     assert quotes[0].fare_notes is None

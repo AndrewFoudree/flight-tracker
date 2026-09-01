@@ -67,7 +67,7 @@ def test_reserving_more_runs_protects_more(monkeypatch):
     assert not hub_survey.affordable(make_config(), 24, reserve_runs=9)[0]
 
 
-PARTY = Passengers(adults=2, children=4, infants=1)
+PARTY = Passengers(adults=3, children=3, infants=1)
 
 
 def test_the_baseline_is_the_cheapest_whole_party_through_fare():
@@ -79,7 +79,7 @@ def test_the_baseline_is_the_cheapest_whole_party_through_fare():
 
 def test_the_baseline_ignores_single_adult_probes():
     """A probe row is a fraction of the party price and would fake a huge saving."""
-    history = [price_row(0, 2916.0), price_row(0, 486.0, adults=1, children=0, infants=0)]
+    history = [price_row(0, 2916.0), price_row(0, 486.0, seats=1)]
     assert hub_survey.through_fare(
         history, "DSM", "MCO", date(2027, 3, 14), PARTY
     ) == 2916.0

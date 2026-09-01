@@ -5,6 +5,7 @@ A typo in an airport code fails here, before any API call is spent.
 
 from __future__ import annotations
 
+import os
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Annotated, Any, Literal
@@ -39,16 +40,56 @@ def turns_two_on(born: date) -> date:
 
 
 class PassengerConfig(_Strict):
-    adults: int = Field(ge=1, le=9)
-    children: int = Field(ge=0, le=9)
-    infants: int = Field(ge=0, le=9)
+    """Who is flying.
+
+    `from_env` names an environment variable holding "adults,children,infants",
+    so a public repo can describe a six-seat booking without publishing the
+    composition of a household. The counts still reach the API in full: a lap
+    infant has to be declared, and children price separately from adults.
+    """
+
+    adults: int = Field(default=0, ge=0, le=9)
+    children: int = Field(default=0, ge=0, le=9)
+    infants: int = Field(default=0, ge=0, le=9)
+    from_env: str | None = None
     # Optional, but strongly recommended: lap-infant eligibility depends on the
     # flight date, not the booking date. Without it the counts above are taken
     # on trust and a child who has aged out is priced as free.
     infant_birthdates: list[date] = Field(default_factory=list)
 
     @model_validator(mode="after")
+    def _load_from_env(self) -> "PassengerConfig":
+        """Fail loudly rather than price a party nobody asked for.
+
+        A missing variable must not fall back to the zeros above: that would
+        quietly search for a different trip and record the answer as if it were
+        this one.
+        """
+        if self.from_env is None:
+            return self
+        raw = os.environ.get(self.from_env, "").strip()
+        if not raw:
+            raise ValueError(
+                f"passengers.from_env names {self.from_env}, which is unset. "
+                'Set it to "adults,children,infants" (the repository variable '
+                "of that name in Actions, or an env var when running locally)."
+            )
+        parts = [p.strip() for p in raw.split(",")]
+        if len(parts) != 3 or not all(p.isdigit() for p in parts):
+            raise ValueError(
+                f"{self.from_env} is {raw!r}; expected three numbers, "
+                '"adults,children,infants"'
+            )
+        adults, children, infants = (int(p) for p in parts)
+        object.__setattr__(self, "adults", adults)
+        object.__setattr__(self, "children", children)
+        object.__setattr__(self, "infants", infants)
+        return self
+
+    @model_validator(mode="after")
     def _check_party(self) -> "PassengerConfig":
+        if self.adults < 1:
+            raise ValueError("a booking needs at least one adult")
         if self.infants > self.adults:
             raise ValueError("infants may not outnumber adults: each lap infant needs an adult lap")
         if self.adults + self.children > 9:

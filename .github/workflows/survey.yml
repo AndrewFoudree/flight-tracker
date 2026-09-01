@@ -48,6 +48,7 @@ jobs:
       - name: Sweep the year
         env:
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          PARTY: ${{ vars.PARTY }}
         run: |
           python -m src.survey \
             --origin "${{ inputs.origin }}" \

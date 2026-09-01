@@ -191,7 +191,7 @@ def test_birthdates_must_match_the_infant_count():
 def test_an_infant_still_under_two_keeps_the_lap_seat():
     config = with_birthdate()                       # March 2027 trip, he is 21 months
     passengers = config.passengers_for(config.routes[0])
-    assert (passengers.adults, passengers.children, passengers.infants) == (2, 4, 1)
+    assert (passengers.adults, passengers.children, passengers.infants) == (3, 3, 1)
     assert passengers.seated == 6
     assert config.infant_notes(config.routes[0]) == []
 
@@ -199,7 +199,7 @@ def test_an_infant_still_under_two_keeps_the_lap_seat():
 def test_an_infant_who_has_aged_out_is_priced_as_a_child_with_a_seat():
     config = with_birthdate(depart="2027-08-01", **{"return": "2027-08-08"})
     passengers = config.passengers_for(config.routes[0])
-    assert (passengers.adults, passengers.children, passengers.infants) == (2, 5, 0)
+    assert (passengers.adults, passengers.children, passengers.infants) == (3, 4, 0)
     assert passengers.seated == 7
     assert "before departure" in config.infant_notes(config.routes[0])[0]
 

@@ -52,6 +52,7 @@ jobs:
       - name: Price the hub legs
         env:
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          PARTY: ${{ vars.PARTY }}
         run: |
           python -m src.hub_survey \
             --origin "${{ inputs.origin }}" \

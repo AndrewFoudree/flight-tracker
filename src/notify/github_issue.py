@@ -64,7 +64,7 @@ def body_for(alert: Alert) -> str:
     quote = alert.quote
     lines = [
         f"**{quote.currency} {quote.total_price:,.2f}** total for "
-        f"{quote.adults} adults, {quote.children} children, {quote.infants} infant(s).",
+        f"{quote.adults + quote.children} seats.",
         "",
         "| | |",
         "|---|---|",

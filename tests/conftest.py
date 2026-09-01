@@ -17,7 +17,7 @@ NOW = datetime(2026, 8, 31, 13, 0, tzinfo=timezone.utc)
 
 BASE_CONFIG = {
     "defaults": {
-        "passengers": {"adults": 2, "children": 4, "infants": 1},
+        "passengers": {"adults": 3, "children": 3, "infants": 1},
         "currency": "USD",
         "cabin": "economy",
         "sources": ["serpapi"],
@@ -42,7 +42,7 @@ BASE_CONFIG = {
 # the suite does not break every time the live config changes.
 WINDOW_CONFIG = {
     "defaults": {
-        "passengers": {"adults": 2, "children": 4, "infants": 1},
+        "passengers": {"adults": 3, "children": 3, "infants": 1},
         "currency": "USD",
         "cabin": "economy",
         "sources": ["serpapi", "travelpayouts"],
@@ -61,6 +61,14 @@ WINDOW_CONFIG = {
         }
     ],
 }
+
+
+@pytest.fixture(autouse=True)
+def party(monkeypatch):
+    """config/routes.yaml reads the split from PARTY, which is a repository
+    variable in Actions and deliberately not in the repo. Tests supply a
+    synthetic one with the same seat count so the shipped config still parses."""
+    monkeypatch.setenv("PARTY", "3,3,1")
 
 
 def load_fixture(name: str) -> dict:
@@ -83,9 +91,7 @@ def price_row(
     days_ago: float,
     price: float,
     route_id: str = "dsm-mco-spring",
-    adults: int = 2,
-    children: int = 4,
-    infants: int = 1,
+    seats: int = 6,
     source: str = "serpapi",
     now: datetime = NOW,
 ) -> PriceRow:
@@ -98,9 +104,7 @@ def price_row(
         destination="MCO",
         depart_date=datetime(2027, 3, 14).date(),
         return_date=datetime(2027, 3, 21).date(),
-        adults=adults,
-        children=children,
-        infants=infants,
+        seats=seats,
         total_price=price,
         currency="USD",
         carrier="Delta",

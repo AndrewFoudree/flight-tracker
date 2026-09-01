@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Public, but there is no reason for a page about one family's travel
+       dates to be searchable. robots.txt says the same thing; this covers
+       crawlers that arrive by link rather than by root. -->
+  <meta name="robots" content="noindex, nofollow">
   <title>Flight price tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>

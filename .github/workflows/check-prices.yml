@@ -46,6 +46,7 @@ jobs:
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PARTY: ${{ vars.PARTY }}
           ROUTES: ${{ inputs.route }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |

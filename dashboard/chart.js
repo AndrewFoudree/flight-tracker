@@ -41,15 +41,10 @@ function parseCsv(text) {
 }
 
 /* Whole-party rows only. Single-adult split-booking probes live in the same
-   file at a fraction of the price and would flatten every chart. */
+   file at a fraction of the price and would flatten every chart. Matched on
+   seats: the party books route.seats of them, a probe books one. */
 function partyRows(rows, route) {
-  return rows.filter(
-    (r) =>
-      r.route_id === route.id &&
-      Number(r.adults) === route.adults &&
-      Number(r.children) === route.children &&
-      Number(r.infants) === route.infants
-  );
+  return rows.filter((r) => r.route_id === route.id && Number(r.seats) === route.seats);
 }
 
 function dailyMinimum(rows) {
@@ -222,7 +217,7 @@ function renderLatestPull(card, route, rows, runs) {
   }
   if (!pull) return;
 
-  const seats = route.adults + route.children;          // a lap infant buys no seat
+  const seats = route.seats;
   const cheapest = Math.min(...pull.departures.map((d) => d.party));
   let anyWide = false;
   let anyMove = false;
@@ -362,7 +357,7 @@ function renderGroup(container, routes, rows, runs) {
   const lead = routes[0];
   const card = document.createElement("section");
   card.className = "route";
-  const party = `${lead.adults}a ${lead.children}c ${lead.infants}i`;
+  const party = `${lead.seats} seats`;
 
   const tracks = routes.map((route) => {
     const priced = dailyMinimum(partyRows(rows, route));

@@ -11,8 +11,8 @@
     "outbound_date": "2027-03-14",
     "return_date": "2027-03-21",
     "currency": "USD",
-    "adults": 2,
-    "children": 4,
+    "adults": 3,
+    "children": 3,
     "infants_on_lap": 1,
     "travel_class": 1,
     "type": 1
@@ -21,21 +21,39 @@
     {
       "flights": [
         {
-          "departure_airport": {"id": "DSM", "time": "2027-03-14 06:00"},
-          "arrival_airport": {"id": "ATL", "time": "2027-03-14 09:20"},
+          "departure_airport": {
+            "id": "DSM",
+            "time": "2027-03-14 06:00"
+          },
+          "arrival_airport": {
+            "id": "ATL",
+            "time": "2027-03-14 09:20"
+          },
           "airline": "Delta",
           "flight_number": "DL 1422",
           "travel_class": "Economy"
         },
         {
-          "departure_airport": {"id": "ATL", "time": "2027-03-14 10:45"},
-          "arrival_airport": {"id": "MCO", "time": "2027-03-14 12:20"},
+          "departure_airport": {
+            "id": "ATL",
+            "time": "2027-03-14 10:45"
+          },
+          "arrival_airport": {
+            "id": "MCO",
+            "time": "2027-03-14 12:20"
+          },
           "airline": "Delta",
           "flight_number": "DL 2201",
           "travel_class": "Economy"
         }
       ],
-      "layovers": [{"duration": 85, "name": "Hartsfield-Jackson", "id": "ATL"}],
+      "layovers": [
+        {
+          "duration": 85,
+          "name": "Hartsfield-Jackson",
+          "id": "ATL"
+        }
+      ],
       "total_duration": 380,
       "price": 2745,
       "type": "Round trip",
@@ -44,8 +62,14 @@
     {
       "flights": [
         {
-          "departure_airport": {"id": "DSM", "time": "2027-03-14 07:15"},
-          "arrival_airport": {"id": "MCO", "time": "2027-03-14 11:40"},
+          "departure_airport": {
+            "id": "DSM",
+            "time": "2027-03-14 07:15"
+          },
+          "arrival_airport": {
+            "id": "MCO",
+            "time": "2027-03-14 11:40"
+          },
           "airline": "Allegiant Air",
           "flight_number": "G4 812",
           "travel_class": "Economy"
@@ -62,21 +86,39 @@
     {
       "flights": [
         {
-          "departure_airport": {"id": "DSM", "time": "2027-03-14 13:05"},
-          "arrival_airport": {"id": "ORD", "time": "2027-03-14 14:35"},
+          "departure_airport": {
+            "id": "DSM",
+            "time": "2027-03-14 13:05"
+          },
+          "arrival_airport": {
+            "id": "ORD",
+            "time": "2027-03-14 14:35"
+          },
           "airline": "American",
           "flight_number": "AA 3388",
           "travel_class": "Economy"
         },
         {
-          "departure_airport": {"id": "ORD", "time": "2027-03-14 16:10"},
-          "arrival_airport": {"id": "MCO", "time": "2027-03-14 20:05"},
+          "departure_airport": {
+            "id": "ORD",
+            "time": "2027-03-14 16:10"
+          },
+          "arrival_airport": {
+            "id": "MCO",
+            "time": "2027-03-14 20:05"
+          },
           "airline": "American",
           "flight_number": "AA 1190",
           "travel_class": "Economy"
         }
       ],
-      "layovers": [{"duration": 95, "name": "O Hare", "id": "ORD"}],
+      "layovers": [
+        {
+          "duration": 95,
+          "name": "O Hare",
+          "id": "ORD"
+        }
+      ],
       "total_duration": 420,
       "price": 2980,
       "type": "Round trip",

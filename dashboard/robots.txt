@@ -1,0 +1,3 @@
+# Reachable by anyone with the link; simply not worth indexing.
+User-agent: *
+Disallow: /

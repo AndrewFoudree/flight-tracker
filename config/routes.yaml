@@ -1,11 +1,12 @@
 defaults:
   passengers:
-    adults: 2
-    children: 4          # ages 2 to 11
-    infants: 1           # under 2 at the time of travel, lap infant
-    # Optional. If set, an infant who has turned two by the last day of travel is
-    # priced as a seated child automatically.
-    # infant_birthdates: ["2025-05-20"]
+    # The split lives in the PARTY repository variable, formatted
+    # "adults,children,infants", because this file is public and who is in a
+    # household is not something to publish. The full split still reaches the
+    # API: children price separately from adults and a lap infant has to be
+    # declared. Only the seat count is ever written down.
+    # A missing PARTY fails the run rather than pricing a different party.
+    from_env: PARTY
   currency: USD
   cabin: economy
   sources: [serpapi, travelpayouts]

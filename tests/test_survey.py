@@ -22,7 +22,7 @@ def survey_config(step: int = 14):
 def test_survey_config_inherits_the_party_from_the_live_config():
     config = survey_config()
     passengers = config.passengers_for(config.routes[0])
-    assert (passengers.adults, passengers.children, passengers.infants) == (2, 4, 1)
+    assert (passengers.adults, passengers.children, passengers.infants) == (3, 3, 1)
     assert config.currency_for(config.routes[0]) == "USD"
 
 
@@ -45,7 +45,7 @@ def test_the_sweep_costs_one_search_per_sampled_date():
     fetcher = SerpApiFetcher(
         config, api_key="k", session=FakeSession(load_fixture("serpapi_dsm_mco.json"))
     )
-    fetcher.search(route, Passengers(2, 4, 1))
+    fetcher.search(route, Passengers(3, 3, 1))
     assert fetcher.searches_consumed() == expected
 
 
@@ -55,7 +55,7 @@ def test_summary_ranks_cheapest_first_and_reports_the_spread():
     fetcher = SerpApiFetcher(
         config, api_key="k", session=FakeSession(load_fixture("serpapi_dsm_mco.json"))
     )
-    quotes = fetcher.search(route, Passengers(2, 4, 1))
+    quotes = fetcher.search(route, Passengers(3, 3, 1))
     text = survey.summarise(quotes, "USD")
     assert "Cheapest fare per departure date" in text
     assert "<-- cheapest" in text

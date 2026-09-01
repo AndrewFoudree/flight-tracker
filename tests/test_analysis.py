@@ -8,7 +8,7 @@ from src import analysis
 from src.models import Passengers
 from tests.conftest import NOW, price_row
 
-PARTY = Passengers(2, 4, 1)
+PARTY = Passengers(3, 3, 1)
 
 
 def test_route_rows_filters_by_route_and_sorts_oldest_first():
@@ -24,7 +24,7 @@ def test_route_rows_filters_by_route_and_sorts_oldest_first():
 def test_single_adult_probes_are_excluded_from_party_history():
     """The split-booking probe is a fraction of the party price. If it leaked
     into the history it would win every 'lowest ever' comparison forever."""
-    rows = [price_row(1, 2800), price_row(1, 348, adults=1, children=0, infants=0)]
+    rows = [price_row(1, 2800), price_row(1, 348, seats=1)]
     selected = analysis.route_rows(rows, "dsm-mco-spring", passengers=PARTY)
     assert [r.total_price for r in selected] == [2800]
 

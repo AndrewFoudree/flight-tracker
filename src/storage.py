@@ -28,9 +28,7 @@ PRICE_COLUMNS: Sequence[str] = (
     "destination",
     "depart_date",
     "return_date",
-    "adults",
-    "children",
-    "infants",
+    "seats",
     "total_price",
     "currency",
     "carrier",
@@ -61,9 +59,10 @@ class PriceRow:
     destination: str
     depart_date: date
     return_date: date | None
-    adults: int
-    children: int
-    infants: int
+    # Seats booked, which is what the analysis needs: 6 for the party, 1 for a
+    # single-adult probe. The split that produced it is not recorded, because
+    # this file is public and the composition of a household is not.
+    seats: int
     total_price: float
     currency: str
     carrier: str | None
@@ -73,13 +72,11 @@ class PriceRow:
 
     def is_group(self, passengers: Passengers) -> bool:
         return (
-            self.adults == passengers.adults
-            and self.children == passengers.children
-            and self.infants == passengers.infants
+            self.seats == passengers.seated
         )
 
     def is_single_adult(self) -> bool:
-        return (self.adults, self.children, self.infants) == (1, 0, 0)
+        return self.seats == 1
 
 
 def parse_dt(value: str) -> datetime:
@@ -107,9 +104,8 @@ def quote_to_row(quote: Quote, origin: str, destination: str) -> dict[str, str]:
         "destination": destination,
         "depart_date": quote.depart_date.isoformat(),
         "return_date": quote.return_date.isoformat() if quote.return_date else "",
-        "adults": str(quote.adults),
-        "children": str(quote.children),
-        "infants": str(quote.infants),
+        # A lap infant buys no seat, so it is not counted here and not recorded.
+        "seats": str(quote.adults + quote.children),
         "total_price": f"{quote.total_price:.2f}",
         "currency": quote.currency,
         "carrier": quote.carrier or "",
@@ -163,9 +159,13 @@ def read_history(path: Path = PRICES_PATH) -> list[PriceRow]:
                         return_date=(
                             date.fromisoformat(raw["return_date"]) if _opt(raw["return_date"]) else None
                         ),
-                        adults=int(raw["adults"]),
-                        children=int(raw["children"]),
-                        infants=int(raw["infants"]),
+                        # Rows written before the schema changed carry the
+                        # split instead; seats is the sum that mattered.
+                        seats=(
+                            int(raw["seats"])
+                            if _opt(raw.get("seats") or "")
+                            else int(raw["adults"]) + int(raw["children"])
+                        ),
                         total_price=float(raw["total_price"]),
                         currency=raw["currency"],
                         carrier=_opt(raw["carrier"]),
@@ -231,10 +231,7 @@ def write_route_metadata(config, path: Path = ROUTES_META_PATH) -> None:
                 "destination": route.destination,
                 "threshold_usd": route.threshold_usd,
                 "currency": config.currency_for(route),
-                "adults": passengers.adults,
-                "children": passengers.children,
-                "infants": passengers.infants,
-                "party_size": passengers.party_size,
+                "seats": passengers.seated,
                 "depart": route.depart.isoformat() if route.depart else None,
                 "return": route.return_.isoformat() if route.return_ else None,
                 "window": (
