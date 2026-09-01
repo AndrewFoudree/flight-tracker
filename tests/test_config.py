@@ -22,7 +22,8 @@ def runs_per_month(workflow: str = ".github/workflows/check-prices.yml") -> int:
     """How often the schedule fires, read from the workflow's cron.
 
     Spend is routes x searches x cadence, so a budget check that assumes daily
-    runs is wrong the moment the schedule changes.
+    runs is wrong the moment the schedule changes. Weekly rounds up to five: a
+    month can hold five Saturdays and the budget has to survive that month too.
     """
     import re
     from pathlib import Path
@@ -30,7 +31,10 @@ def runs_per_month(workflow: str = ".github/workflows/check-prices.yml") -> int:
     text = Path(workflow).read_text(encoding="utf-8")
     cron = re.search(r'- cron: "([^"]+)"', text)
     assert cron, "no cron found in the price workflow"
-    day_of_month = cron.group(1).split()[2]
+    fields = cron.group(1).split()
+    day_of_month, day_of_week = fields[2], fields[4]
+    if day_of_week != "*":                           # one run a week per named day
+        return 5 * len(day_of_week.split(","))
     every = re.match(r"\*/(\d+)$", day_of_month)
     if every:
         return 31 // int(every.group(1)) + 1

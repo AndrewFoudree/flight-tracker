@@ -1,5 +1,5 @@
 /* Reads data/prices.csv and data/routes.json at load and renders one chart per
-   route. No build step: the price workflow commits both files daily, and Pages
+   route. No build step: the price workflow commits both files weekly, and Pages
    republishes them. */
 
 const CANDIDATES = ["data/", "../data/"]; // deployed layout, then local checkout

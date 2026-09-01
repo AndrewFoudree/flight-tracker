@@ -2,10 +2,11 @@ name: Check flight prices
 
 on:
   schedule:
-    # Every other day: ~120 searches a month against a 250 plan. When the cycle
-    # runs short the run records NA rather than skipping silently, so a blind
-    # stretch shows on the dashboard as a gap instead of looking like flat prices.
-    - cron: "0 13 */2 * *"   # 13:00 UTC, roughly 08:00 Central
+    # Once a week: 8 searches a run, at most 40 a cycle against a 250 plan. When
+    # the cycle runs short the run records NA rather than skipping silently, so a
+    # blind stretch shows on the dashboard as a gap instead of looking like flat
+    # prices.
+    - cron: "0 13 * * 6"    # Saturday 13:00 UTC, 08:00 Central (07:00 once CST starts)
   workflow_dispatch:        # manual trigger for testing
     inputs:
       route:
