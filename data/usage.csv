@@ -22,3 +22,15 @@ observed_at,source,route_id,searches
 2026-08-31T20:23:30Z,serpapi,survey,3
 2026-08-31T20:36:43Z,serpapi,dsm-stt-jan-thursdays,8
 2026-08-31T20:36:43Z,travelpayouts,dsm-stt-jan-thursdays,1
+2026-09-01T15:21:57Z,serpapi,dsm-stt-jan-saturdays,10
+2026-09-01T15:21:57Z,serpapi,dsm-sju-jan-saturdays,10
+2026-09-01T15:21:57Z,serpapi,dsm-stt-apr-may-saturdays,4
+2026-09-01T15:21:57Z,serpapi,dsm-sju-apr-may-saturdays,4
+2026-09-01T15:21:57Z,travelpayouts,dsm-stt-jan-saturdays,1
+2026-09-01T15:21:57Z,travelpayouts,dsm-sju-jan-saturdays,1
+2026-09-01T15:21:57Z,travelpayouts,dsm-stt-apr-may-saturdays,2
+2026-09-01T15:21:57Z,travelpayouts,dsm-sju-apr-may-saturdays,2
+2026-09-01T15:21:57Z,travelpayouts,dsm-stt-jan-thursdays,1
+2026-09-01T15:21:57Z,travelpayouts,dsm-sju-jan-thursdays,1
+2026-09-01T15:21:57Z,travelpayouts,dsm-stt-apr-may-thursdays,2
+2026-09-01T15:21:57Z,travelpayouts,dsm-sju-apr-may-thursdays,2

@@ -1,0 +1,9 @@
+observed_at,route_id,status,quotes,note
+2026-09-01T15:21:57Z,dsm-stt-jan-saturdays,ok,345,
+2026-09-01T15:21:57Z,dsm-sju-jan-saturdays,ok,345,
+2026-09-01T15:21:57Z,dsm-stt-apr-may-saturdays,ok,345,
+2026-09-01T15:21:57Z,dsm-sju-apr-may-saturdays,ok,345,
+2026-09-01T15:21:57Z,dsm-stt-jan-thursdays,budget_exhausted,0,SerpAPI cycle allowance spent
+2026-09-01T15:21:57Z,dsm-sju-jan-thursdays,budget_exhausted,0,SerpAPI cycle allowance spent
+2026-09-01T15:21:57Z,dsm-stt-apr-may-thursdays,budget_exhausted,0,SerpAPI cycle allowance spent
+2026-09-01T15:21:57Z,dsm-sju-apr-may-thursdays,budget_exhausted,0,SerpAPI cycle allowance spent
