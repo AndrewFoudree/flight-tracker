@@ -30,36 +30,6 @@
     }
   },
   {
-    "id": "dsm-stt-apr-may-saturdays",
-    "origin": "DSM",
-    "destination": "STT",
-    "threshold_usd": 2800.0,
-    "currency": "USD",
-    "seats": 6,
-    "depart": null,
-    "return": null,
-    "window": {
-      "earliest": "2027-04-24",
-      "latest": "2027-05-15",
-      "nights": 7
-    }
-  },
-  {
-    "id": "dsm-sju-apr-may-saturdays",
-    "origin": "DSM",
-    "destination": "SJU",
-    "threshold_usd": 2700.0,
-    "currency": "USD",
-    "seats": 6,
-    "depart": null,
-    "return": null,
-    "window": {
-      "earliest": "2027-04-24",
-      "latest": "2027-05-15",
-      "nights": 7
-    }
-  },
-  {
     "id": "dsm-stt-jan-thursdays",
     "origin": "DSM",
     "destination": "STT",
@@ -99,7 +69,7 @@
     "depart": null,
     "return": null,
     "window": {
-      "earliest": "2027-04-22",
+      "earliest": "2027-04-29",
       "latest": "2027-05-13",
       "nights": 5
     }
@@ -114,7 +84,7 @@
     "depart": null,
     "return": null,
     "window": {
-      "earliest": "2027-04-22",
+      "earliest": "2027-04-29",
       "latest": "2027-05-13",
       "nights": 5
     }

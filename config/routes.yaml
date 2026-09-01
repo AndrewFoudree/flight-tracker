@@ -20,19 +20,19 @@ defaults:
 budget:
   serpapi_monthly_searches: 250
   reserve: 20            # stop before hitting zero
-  # Worst case is a month holding five Saturdays: 44 searches a run x 5 = 220,
-  # inside the 230 spendable. Sized to fit every month, not the average one, so
-  # a five-Saturday month cannot quietly run the plan dry. Two destinations at
-  # full parity would be 68 a run and 340 a month, which does not fit, so the
-  # single-adult probe is spent only where a booking is most likely: see the
-  # January Saturday routes below.
+  # Worst case is a month holding five Sundays: 32 searches a run x 5 = 160,
+  # inside the 230 spendable. Sized to fit every month, not the average one.
+  # 28 of the 32 go to January, which is the window being bought; April/May is a
+  # 4-search baseline until it becomes primary in December. The 70 spare is
+  # deliberate headroom for the backlog -- one-way legs, a day either side of
+  # each target, further origins -- which is added one item at a time.
 
 routes:
   # Order is load-bearing. When a cycle runs short the guard funds routes in the
-  # order they appear and records NA for the rest, so the grid is ordered by how
-  # much is riding on each cell: Saturday before Thursday, January before the
-  # shoulder, and the two destinations paired at every level so a short cycle
-  # degrades both alike instead of blinding one of them.
+  # order they appear and records NA for the rest, so the order runs from what is
+  # being bought to what is only a reference: January before the shoulder, and the
+  # two destinations paired at every level so a short cycle degrades both alike
+  # instead of blinding one of them.
 
   # Caribbean leisure capacity runs on a Saturday turnaround, so the cheap bucket
   # should be deepest Sat -> Sat. The survey backs this for January: Saturday was
@@ -84,47 +84,6 @@ routes:
     # 5 dates x 2 = 10 a run.
     compare_split_booking: true
 
-  # The same turnaround test on the shoulder window. No survey evidence here --
-  # only one Saturday was ever sampled (May 1, $3,165, off the floor) -- so this
-  # is the capacity argument on trial. Party fare only: the probe is what got cut
-  # to fit two destinations, and it is worth least on an exploratory window.
-  - id: dsm-stt-apr-may-saturdays
-    origin: DSM
-    destination: STT
-    depart_window:
-      earliest: "2027-04-24"
-      latest: "2027-05-15"
-    nights: 7
-    window_step_days: 7
-    threshold_usd: 2800
-    alert_on:
-      - absolute_below: 2800
-      - lowest_in_days: 30
-      - percent_drop: 5
-    # 4 dates x 1 = 4 a run.
-    compare_split_booking: false
-
-  # San Juan on the shoulder window. Party fare only, as above.
-  - id: dsm-sju-apr-may-saturdays
-    origin: DSM
-    destination: SJU
-    depart_window:
-      earliest: "2027-04-24"
-      latest: "2027-05-15"
-    nights: 7
-    window_step_days: 7
-    # $2,796 is San Juan's bucket floor, hit on three of four January Thursdays
-    # by two carriers on 2026-09-01. A bar at $2,800 would fire every week and
-    # mean nothing; $2,700 fires only on a genuine break below the bucket. The
-    # drawn threshold matches the alert bar so the chart and the alert agree.
-    threshold_usd: 2700
-    alert_on:
-      - absolute_below: 2700
-      - lowest_in_days: 30
-      - percent_drop: 5
-    # 4 dates x 1 = 4 a run.
-    compare_split_booking: false
-
   # January was the cheapest month of the year: median $2,970 against $3,058 to
   # $3,201 elsewhere, and the most days sitting on the $2,955 floor. Thu -> Tue
   # is 5 nights; the window steps 7 days so it lands on all four January
@@ -143,7 +102,9 @@ routes:
       - absolute_below: 2800
       - lowest_in_days: 30
       - percent_drop: 5
-    # 4 dates x 1 = 4 a run.
+    # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
+    # price can be judged as genuinely low rather than only low for January.
+    # Full resolution comes back when this window becomes primary in December.
     compare_split_booking: false
 
   # San Juan, January midweek. Party fare only, as above.
@@ -164,7 +125,9 @@ routes:
       - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
-    # 4 dates x 1 = 4 a run.
+    # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
+    # price can be judged as genuinely low rather than only low for January.
+    # Full resolution comes back when this window becomes primary in December.
     compare_split_booking: false
 
   # A second look at the shoulder season. The year survey put April's median at
@@ -175,16 +138,18 @@ routes:
     origin: DSM
     destination: STT
     depart_window:
-      earliest: "2027-04-22"
-      latest: "2027-05-13"
-    nights: 5
-    window_step_days: 7
+      earliest: "2027-04-29"   # one representative Thursday in April
+      latest: "2027-05-13"     # one in May
+    nights: 5                  # Thursday -> Tuesday
+    window_step_days: 14       # exactly two dates: Apr 29 and May 13
     threshold_usd: 2800
     alert_on:
       - absolute_below: 2800
       - lowest_in_days: 30
       - percent_drop: 5
-    # 4 dates x 1 = 4 a run.
+    # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
+    # price can be judged as genuinely low rather than only low for January.
+    # Full resolution comes back when this window becomes primary in December.
     compare_split_booking: false
 
   # San Juan, shoulder midweek. The thinnest cell in the grid: new destination,
@@ -194,10 +159,10 @@ routes:
     origin: DSM
     destination: SJU
     depart_window:
-      earliest: "2027-04-22"
-      latest: "2027-05-13"
-    nights: 5
-    window_step_days: 7
+      earliest: "2027-04-29"   # one representative Thursday in April
+      latest: "2027-05-13"     # one in May
+    nights: 5                  # Thursday -> Tuesday
+    window_step_days: 14       # exactly two dates: Apr 29 and May 13
     # $2,796 is San Juan's bucket floor, hit on three of four January Thursdays
     # by two carriers on 2026-09-01. A bar at $2,800 would fire every week and
     # mean nothing; $2,700 fires only on a genuine break below the bucket. The
@@ -207,5 +172,7 @@ routes:
       - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
-    # 4 dates x 1 = 4 a run.
+    # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
+    # price can be judged as genuinely low rather than only low for January.
+    # Full resolution comes back when this window becomes primary in December.
     compare_split_booking: false

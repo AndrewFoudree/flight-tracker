@@ -106,9 +106,12 @@ Consumption is recorded in `data/usage.csv` and the run stops before the cap, so
 the limit is never discovered on the day a fare drops. `budget.reserve` keeps a
 buffer in hand.
 
-The live config spends 44 searches a run. A month can hold five Saturdays, so the
-worst case is 220 against the 230 spendable - sized to fit every month rather
-than the average one. `tests/test_config.py` reads the cron out of the workflow
+The live config spends 32 searches a run. A month can hold five Sundays, so the
+worst case is 160 against the 230 spendable - sized to fit every month rather
+than the average one. 28 of the 32 go to January, the window actually being
+bought. The 70 spare is deliberate: one-way legs, a day either side of each
+target date and further origins all cost searches, and each is added on its own
+rather than all at once. `tests/test_config.py` reads the cron out of the workflow
 and asserts this, so adding a route or changing the cadence fails a test instead
 of quietly overrunning the plan mid-cycle.
 
@@ -132,25 +135,29 @@ budget-limited.
 
 ## Two destinations
 
-St. Thomas and San Juan are both tracked, on the same two windows and the same
-two weekday patterns - eight routes, a 2x2x2 grid. The dashboard renders them
+St. Thomas and San Juan are both tracked. The dashboard renders them
 identically; nothing there is destination-aware.
 
-Parity is not free. The grid at full coverage - party fare plus single-adult
-probe on all 34 departure dates - is 68 searches a run and 340 a month against a
-230 cap. It does not fit, and the interesting question is what to give up.
+Parity is not free. Both destinations at full coverage - party fare plus
+single-adult probe on every departure of both weekday patterns in both windows -
+is 68 searches a run and 340 a month against a 230 cap. It does not fit, and the
+interesting question is what to give up.
 
-**The probe was cut before any departure dates were.** Finding a cheap date needs
-breadth: every date the party fare is checked on is a chance to catch the floor.
-The probe answers a different question - whether the cheap bucket still holds all
-six seats - and that answer moves slowly and transfers across nearby dates in a
-way a fare does not. So both destinations keep every departure date, and the
-probe now runs only on the January Saturday routes, the cell where a booking is
-likeliest. That is 44 a run, 220 in a five-Saturday month.
+**Two cuts, in this order.** First the single-adult probe, before any departure
+date: finding a cheap date needs breadth, and every date the party fare is
+checked on is a chance to catch the floor, while the probe answers a
+slower-moving question that transfers across nearby dates. It survives only on
+the January Saturday routes, where a booking is likeliest.
 
-The alternative, kept here because it is a fair call and easy to swap: halve the
-shoulder windows to two departures each and keep the probe across all of January.
-Same 44 a run, more split-booking detail, less chance of catching a cheap date.
+Then the shoulder window itself. April/May is not being bought yet - it exists so
+a January price can be judged genuinely low rather than merely low for January.
+That needs a baseline, not a search, so it is one representative midweek
+departure a month per destination, Apr 29 and May 13, four searches a run
+between them. Apr 22 was dropped as an outlier: $3,711 to St. Thomas against
+$2,955 on the other three April dates. Full resolution comes back when this
+window becomes the primary one in December.
+
+That leaves 32 a run: 28 on January, 4 on the shoulder baseline.
 
 Two things about San Juan specifically:
 
@@ -158,6 +165,12 @@ Two things about San Juan specifically:
   below is St. Thomas data. The January and April/May windows were inherited so
   the two destinations are comparable, not because SJU was shown to be cheapest
   then. Worth a `Survey a year of fares` run on SJU once the plan renews.
+- **It wins as a destination, not as a connection.** San Juan priced $159 to $249
+  under St. Thomas on 2026-09-01. That gap belongs to San Juan as the place you
+  are going: routing through SJU to reach St. Thomas adds around $1,000 in
+  interisland hops for a group this size, so it would have to be $1,000 cheaper
+  before it broke even. The Puerto Rico to St. Thomas ferry is not an escape
+  from that - it has not operated in years.
 - **It has no `absolute_below` rule.** The $2,800 bar is calibrated to St.
   Thomas's $2,955 floor. San Juan is a far larger airport with mainland capacity
   St. Thomas does not have, so that bar would likely either fire every week or
