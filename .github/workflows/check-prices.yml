@@ -6,7 +6,7 @@ on:
     # the cycle runs short the run records NA rather than skipping silently, so a
     # blind stretch shows on the dashboard as a gap instead of looking like flat
     # prices.
-    - cron: "0 13 * * 6"    # Saturday 13:00 UTC, 08:00 Central (07:00 once CST starts)
+    - cron: "0 13 * * 0"    # Sunday 13:00 UTC, 08:00 Central (07:00 once CST starts)
   workflow_dispatch:        # manual trigger for testing
     inputs:
       route:
