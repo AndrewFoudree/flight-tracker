@@ -137,12 +137,12 @@ function latestPull(rows, route) {
   const day = mine.map((r) => r.observed_at.slice(0, 10)).sort().pop();
   const todays = mine.filter((r) => r.observed_at.startsWith(day));
 
-  const isParty = (r) =>
-    Number(r.adults) === route.adults &&
-    Number(r.children) === route.children &&
-    Number(r.infants) === route.infants;
-  const isSingle = (r) =>
-    Number(r.adults) === 1 && Number(r.children) === 0 && Number(r.infants) === 0;
+  // Seats, like partyRows. These were left on the old adults/children/infants
+  // columns when the schema changed, so every comparison was NaN === undefined
+  // and no departure was ever recognised as a party fare: the pull tables went
+  // silently empty rather than erroring.
+  const isParty = (r) => Number(r.seats) === route.seats;
+  const isSingle = (r) => Number(r.seats) === 1;
 
   // departure -> day -> cheapest party fare, so the previous pull is a lookup
   // rather than a rescan. Keyed by day because a run writes several rows.
