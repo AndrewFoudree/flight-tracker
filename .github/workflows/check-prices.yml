@@ -80,6 +80,11 @@ jobs:
         run: |
           mkdir -p _site/data
           cp dashboard/* _site/
+          # GitHub Pages serves assets with max-age=600, so a deploy is invisible
+          # for ten minutes unless the URL changes. Stamping the commit onto the
+          # script src makes every publish take effect on the next load instead
+          # of leaving people hard-refreshing to see their own data.
+          sed -i "s|src=\"chart.js\"|src=\"chart.js?v=${GITHUB_SHA}\"|" _site/index.html
           cp data/prices.csv data/routes.json _site/data/
           # Optional, and separate so a missing one never masks a missing price
           # file: runs.csv does not exist until the first run records an outcome.
