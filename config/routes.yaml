@@ -18,7 +18,10 @@ defaults:
 
 budget:
   serpapi_monthly_searches: 250
-  reserve: 20            # stop before hitting zero
+  reserve: 1             # TEMPORARY, restore to 20 after the fare_notes check
+  # 6 searches are left and expire at the 30 Sep renewal. 4 of them prove the
+  # fare-attribute capture works now rather than discovering on 3 October that
+  # the pattern never matched anything.
   # Worst case is a month holding five Saturdays: 44 searches a run x 5 = 220,
   # inside the 230 spendable. Sized to fit every month, not the average one, so
   # a five-Saturday month cannot quietly run the plan dry. Two destinations at
