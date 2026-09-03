@@ -225,6 +225,9 @@ function renderLatestPull(card, route, rows, runs) {
   let anyBagFee = false;
 
   const body = pull.departures.map((d) => {
+    // Two columns, because they answer different questions: the raw probe fare
+    // is what one seat costs in the cheapest bucket, and seats x that is the
+    // only figure comparable to the party total beside it.
     const split = d.single === undefined ? null : d.single * seats;
     const spread = split === null ? null : d.party - split;
     // A party fare well above N single fares means the cheap bucket no longer
@@ -258,6 +261,7 @@ function renderLatestPull(card, route, rows, runs) {
         move === null ? "&mdash;" : move === 0 ? "no change"
           : (move > 0 ? "+" : "") + money(move, route.currency)
       }</td>
+      <td>${d.single === undefined ? "&mdash;" : money(d.single, route.currency)}</td>
       <td>${split === null ? "&mdash;" : money(split, route.currency)}</td>
       <td class="${wide ? "wide" : ""}">${
         spread === null ? "&mdash;" : (spread >= 0 ? "+" : "") + money(spread, route.currency)
@@ -280,7 +284,7 @@ function renderLatestPull(card, route, rows, runs) {
     <div class="scroll"><table>
       <thead><tr>
         <th>Depart</th><th>Return</th><th>Party fare</th><th>Since last pull</th>
-        <th>${seats} &times; single</th><th>Spread</th><th>Carrier</th><th>Stops</th>
+        <th>Single</th><th>${seats} &times; single</th><th>Spread</th><th>Carrier</th><th>Stops</th>
         <th>Fare</th>
       </tr></thead>
       <tbody>${body}</tbody>
