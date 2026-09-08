@@ -30,8 +30,12 @@ MONTHS = {"near": "2026-11", "far": "2027-01"}
 ONE_SHAPE = (SHAPES[0],)
 
 
-def cell(pair, horizon, fares, shape=PRODUCTION_SHAPE, market=PRODUCTION_MARKET, error=None):
+def cell(
+    pair, horizon, fares, shape=PRODUCTION_SHAPE, market=PRODUCTION_MARKET,
+    error=None, tracked=None,
+):
     origin, destination = pair
+    control = (origin, destination) == CONTROL
     return Cell(
         origin=origin,
         destination=destination,
@@ -41,7 +45,10 @@ def cell(pair, horizon, fares, shape=PRODUCTION_SHAPE, market=PRODUCTION_MARKET,
         horizon=horizon,
         shape=shape,
         market=market,
-        control=(origin, destination) == CONTROL,
+        control=control,
+        # Most of these grids are control + tracked and nothing else, which is
+        # the ordinary shape of a run.
+        tracked=(not control) if tracked is None else tracked,
         fares=fares,
         error=error,
     )
@@ -113,6 +120,37 @@ def test_a_variant_differing_in_both_reports_both_changes():
     assert name == "query_shape"
     assert "round_trip_dated" in detail
     assert "DEFAULT_MARKET" in detail
+
+
+def test_a_reference_pair_with_fares_does_not_make_the_tracker_look_covered():
+    """The 2026-09-08 miss: JFK-LAX returned 6 fares and the verdict read healthy.
+
+    JFK-LAX is neither the control nor a route this tracker follows. It is there
+    to show the cache holds dense US routes, which is evidence about the cache,
+    not about St Thomas. Only tracked pairs decide coverage.
+    """
+    cells = [
+        cell(CONTROL, "near", 16),
+        cell(CONTROL, "far", 14),
+        cell(("JFK", "LAX"), "near", 17, tracked=False),
+        cell(("JFK", "LAX"), "far", 6, tracked=False),
+        cell(("DSM", "STT"), "near", 0),
+        cell(("DSM", "STT"), "far", 0),
+        cell(("DSM", "SJU"), "near", 0),
+        cell(("DSM", "SJU"), "far", 0),
+    ]
+    name, detail = verdict(cells)
+    assert name == "route_thin"
+    # The reference pair still earns its place: it is why this is a statement
+    # about these routes rather than about US routes in general.
+    assert "JFK-LAX" in detail
+
+
+def test_a_run_with_no_tracked_pair_refuses_to_draw_a_coverage_conclusion():
+    cells = [cell(CONTROL, "near", 16), cell(("JFK", "LAX"), "far", 6, tracked=False)]
+    name, detail = verdict(cells)
+    assert name == "no_tracked_routes"
+    assert "routes.yaml" in detail
 
 
 def test_a_variant_is_only_credited_when_the_live_query_found_nothing():
@@ -187,6 +225,23 @@ def test_probe_covers_every_pair_horizon_and_shape():
     assert len(cells) == 2 * 2 * len(SHAPES)
     assert len({c.shape for c in cells}) == len(SHAPES)
     assert sum(1 for c in cells if c.is_production) == 4
+
+
+def test_probe_marks_only_the_configured_pairs_as_tracked():
+    config = make_window_config()
+
+    def fetcher_for(market):
+        return TravelpayoutsFetcher(
+            config, token="t", market=market,
+            session=FakeSession({"success": True, "currency": "USD", "data": []}),
+        )
+
+    cells = probe(
+        fetcher_for, [CONTROL, ("DSM", "STT")], MONTHS, CONTROL, "USD",
+        shapes=ONE_SHAPE, tracked={("DSM", "STT")},
+    )
+    assert {c.pair for c in cells if c.tracked} == {"DSM-STT"}
+    assert not any(c.tracked for c in cells if c.control)
 
 
 def test_probe_survives_one_failing_call():

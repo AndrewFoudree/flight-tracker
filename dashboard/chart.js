@@ -512,9 +512,10 @@ function renderCoverage(container, probe) {
       // The row reproducing the weekly query is the reference every other row
       // is read against, so it has to be findable at a glance.
       return `<tr class="${c.is_production ? "live" : ""}">
-        <td>${esc(c.origin)} &rarr; ${esc(c.destination)}${
-          c.control ? ' <span class="tag">control</span>' : ""
-        }</td>
+        <td>${esc(c.origin)} &rarr; ${esc(c.destination)}
+          <span class="tag">${
+            c.control ? "control" : c.tracked ? "tracked" : "reference"
+          }</span></td>
         <td>${esc(c.departure_at)}</td>
         <td>${esc(c.horizon)}</td>
         <td>${esc(c.shape || "—")}${
@@ -542,7 +543,8 @@ function renderCoverage(container, probe) {
     </table></div>
     <p class="legend">The control route is one with known traffic. It is what
       separates "this API has nothing for these dates" from "this API has nothing
-      for these routes". The query shapes separate both of those from a query of
+      for these routes". Only the rows marked <em>tracked</em> decide whether the
+      tracker has coverage; control and reference rows are there to explain why. The query shapes separate both of those from a query of
       ours that is simply wrong: any shape returning fares where the live query
       returns none is our bug, not the cache's. No fare here is a price for a
       tracked trip, and none of it reaches the charts above.</p>`;

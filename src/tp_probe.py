@@ -14,24 +14,36 @@ different responses, and a scheduled run cannot tell them apart:
     never help these trips and should stop being called a fallback.
 
 The probe separates them by pricing a control route that certainly has traffic
-(DSM-DEN) beside the tracked ones, near-term beside the tracked window, in every
-query shape -- and comparing all of it against the query production actually
-sends:
+beside the tracked ones, near-term beside the tracked window, in every query
+shape -- and comparing all of it against the query production actually sends:
 
     a variant returns fares, production does not -> our bug, and it names itself
     control, near     empty in every shape       -> the account, not the routes
     control, near ok; far empty                  -> a horizon limit
     control, far  ok; tracked far empty          -> these routes are not searched
 
-The 2026-09-08 run came back empty in all twelve cells including the near-term
-control, with and without `market=us`. That ruled the market filter out and put
-the query shape next in line, which is what the shape arms are for.
+What it found, on 2026-09-08, over three runs:
+
+  * `market=us` changed nothing. Ruled out.
+  * No query shape changed anything -- one way, exact dates, an explicit
+    `return_at`, all empty. Ruled out.
+  * With MOW-LED as the control the live query returned 16 fares near-term and
+    14 in the tracked window, and JFK-LAX returned 17 and 6. The account, the
+    token, the endpoint and the production query are all fine.
+  * DSM-STT and DSM-SJU returned zero in every shape, in both horizons.
+
+So the cache reaches 2027 and holds dense US routes; it simply has nothing for
+these two. Travelpayouts is not a fallback for this trip, and the first two runs
+show why the control route has to be one with traffic you are certain of:
+DSM-DEN returned nothing either, and reading that as "our query is broken" was
+wrong.
 
 Nothing here spends a SerpAPI search, and nothing is written to prices.csv. A
-cached one-adult fare for Denver in October is evidence about an API, not a fare
+cached one-adult fare for a reference route is evidence about an API, not a fare
 for a trip being tracked, and mixing the two would put a line on a chart that
 nobody was ever quoted. The findings go to data/source_probe.json, which the
 dashboard renders as a coverage panel.
+
 """
 
 from __future__ import annotations
@@ -96,6 +108,11 @@ class Cell:
     shape: str
     market: str | None
     control: bool
+    # Whether config/routes.yaml actually follows this pair. Not the inverse of
+    # control: a probe may carry reference pairs that are neither, and letting
+    # those vote on coverage is how a run with JFK-LAX in it reported the
+    # tracked routes healthy while DSM-STT returned nothing at all.
+    tracked: bool
     fares: int | None            # None when the call failed
     error: str | None
 
@@ -132,7 +149,7 @@ def probe(
     fetcher_for, pairs: list[tuple[str, str]], months: dict[str, str],
     control: tuple[str, str], currency: str,
     shapes: tuple[Shape, ...] = SHAPES, markets: tuple[str | None, ...] = (PRODUCTION_MARKET,),
-    nights: int = 7,
+    nights: int = 7, tracked: set[tuple[str, str]] | None = None,
 ) -> list[Cell]:
     """Price every pair x horizon x shape x market. One call each, all free."""
     cells: list[Cell] = []
@@ -164,6 +181,7 @@ def probe(
                         departure_at=departure_at, return_at=return_at, horizon=horizon,
                         shape=shape.name, market=market,
                         control=(origin, destination) == control,
+                        tracked=(origin, destination) in (tracked or set()),
                         fares=fares, error=error,
                     )
                     cells.append(cell)
@@ -237,7 +255,14 @@ def verdict(cells: list[Cell]) -> tuple[str, str]:
     live = production_cells(cells)
     control_near = [c for c in live if c.control and c.horizon == "near"]
     control_far = [c for c in live if c.control and c.horizon == "far"]
-    tracked_far = [c for c in live if not c.control and c.horizon == "far"]
+    tracked_far = [c for c in live if c.tracked and c.horizon == "far"]
+
+    if not any(c.tracked for c in live):
+        return "no_tracked_routes", (
+            "This run probed no route that config/routes.yaml follows, so it says "
+            "nothing about whether the tracker's own sources are working. Re-run "
+            "with the tracked pairs included."
+        )
 
     if any(c.ok for c in tracked_far):
         return "healthy", (
@@ -262,10 +287,14 @@ def verdict(cells: list[Cell]) -> tuple[str, str]:
         )
 
     if any(c.ok for c in control_far) and not any(c.ok for c in tracked_far):
+        others = sorted(
+            {c.pair for c in live if not c.control and not c.tracked and c.ok}
+        )
+        also = f" So does {', '.join(others)}." if others else ""
         return "route_thin", (
             "The control route returns fares in the tracked window and the tracked "
             "routes return none, so the cache reaches these dates but nobody searches "
-            "these routes. Travelpayouts will not serve as a fallback here."
+            f"these routes.{also} Travelpayouts will not serve as a fallback here."
         )
 
     return "mixed", (
@@ -283,9 +312,8 @@ def summarise(cells: list[Cell], name: str, detail: str) -> str:
     ]
     for c in cells:
         result = f"ERROR {c.error}" if c.error else f"{c.fares} fare(s)"
-        flags = "".join(
-            [" (control)" if c.control else "", " <- live query" if c.is_production else ""]
-        )
+        role = "control" if c.control else "tracked" if c.tracked else "reference"
+        flags = f" ({role})" + (" <- live query" if c.is_production else "")
         lines.append(
             f"  {c.pair:<9} {c.departure_at:<12} {c.shape:<17} "
             f"{(c.market or '-'):<7} {result}{flags}"
@@ -339,9 +367,13 @@ def run(args: argparse.Namespace) -> int:
     def fetcher_for(market: str | None) -> TravelpayoutsFetcher:
         return TravelpayoutsFetcher(config, market=market)
 
+    # Which pairs the tracker actually follows, read from the config rather than
+    # assumed from the command line, so an added reference pair can never be
+    # mistaken for a route whose coverage matters.
+    tracked = {(r.origin, r.destination) for r in config.routes}
     cells = probe(
         fetcher_for, pairs, months, control, currency,
-        markets=markets, nights=args.nights,
+        markets=markets, nights=args.nights, tracked=tracked,
     )
     name, detail = verdict(cells)
 

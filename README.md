@@ -145,19 +145,40 @@ empty array. Verified on DSM-DEN and DSM-STT for 2027 departures: no cached fare
 at all. It costs nothing to leave enabled in case the cache fills closer to
 departure, but do not plan a route around it without checking first.
 
-Both of those checks were 2027 departures, which cannot tell a cache that does
-not reach 2027 from routes nobody searches at all -- and neither from a query of
-ours that is simply wrong. The `Travelpayouts coverage probe` workflow
-(`src/tp_probe.py`) separates them: it prices a control route with known traffic
-beside the tracked ones, near-term beside the tracked window, with and without an
-explicit `market` parameter. It is manual, spends no SerpAPI search, and is
-therefore safe to run during a blind stretch, when it is the only thing left that
-can learn anything. The findings go to `data/source_probe.json` and render as a
+**Confirmed on 2026-09-08, and it is the routes.** The `Travelpayouts coverage
+probe` workflow (`src/tp_probe.py`) prices a control route with known traffic
+beside the tracked ones, near-term beside the tracked window, in four query
+shapes, with and without an explicit `market`. Three runs settled it:
+
+| | near-term | tracked window |
+|---|---|---|
+| MOW-LED (control) | 16 fares | 14 fares |
+| JFK-LAX (reference) | 17 fares | 6 fares |
+| DSM-STT | 0 | 0 |
+| DSM-SJU | 0 | 0 |
+
+All on the live query, unchanged. The account, the token, the endpoint and the
+query shape are all fine; `market` and every alternative shape changed nothing.
+The cache reaches 2027 and holds dense US routes. It has nothing for these two,
+and no change on our side will produce any.
+
+**So Travelpayouts is not a fallback for this trip.** Leave it enabled -- it is
+free, unmetered, and may fill closer to departure -- but when SerpAPI runs out
+the tracker is blind, not degraded. That is what makes the budget guard above the
+thing actually protecting the schedule.
+
+One process note worth keeping: the first two runs used DSM-DEN as the control
+and it returned nothing either, which read as "our query is broken" and sent two
+rounds of work after a bug that did not exist. A control route is only a control
+if you are certain it has traffic.
+
+The probe is manual, spends no SerpAPI search, and is therefore safe to run
+during a blind stretch. Findings go to `data/source_probe.json` and render as a
 coverage panel on the dashboard. Fares it finds are deliberately **not** written
-to `prices.csv`: a cached one-adult Denver fare is evidence about an API, not a
-price for a tracked trip. Fares Travelpayouts returns for a *tracked* route need
-nothing extra -- they arrive through the weekly run and appear in the
-single-adult columns of the pull table.
+to `prices.csv`: a cached one-adult fare for a reference route is evidence about
+an API, not a price for a tracked trip. Fares Travelpayouts returns for a
+*tracked* route need nothing extra -- they arrive through the weekly run and
+appear in the single-adult columns of the pull table.
 
 Travelpayouts is unmetered as far as this tracker is concerned and is never
 budget-limited.
@@ -533,7 +554,7 @@ carries on.
 | Source | Status | Free allowance | Notes |
 |---|---|---|---|
 | SerpAPI Google Flights | Open | ~250 searches/month | Scrapes Google Flights, returns JSON. Primary source. |
-| Travelpayouts | Open, affiliate signup | Generous | Cheap-fares endpoints. Good secondary source. |
+| Travelpayouts | Open, affiliate signup | Generous | Cheap-fares endpoints. Works, but holds no cache for DSM-STT or DSM-SJU: see *Budget*. |
 | Amadeus Self-Service | Closed | n/a | Free tier discontinued July 2026. |
 | Kiwi Tequila | Invitation only | n/a | No self-service access for new developers. |
 | FlightAPI.io | Paid | n/a | Fallback if the free sources are outgrown. |
