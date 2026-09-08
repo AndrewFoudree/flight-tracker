@@ -1,11 +1,11 @@
 {
   "source": "travelpayouts",
-  "checked_at": "2026-09-08T17:50:24Z",
+  "checked_at": "2026-09-08T17:54:42Z",
   "control": "MOW-LED",
   "currency": "USD",
   "production_shape": "round_trip_month",
-  "verdict": "healthy",
-  "detail": "Travelpayouts holds cached fares for the tracked routes in the tracked window. They reach the dashboard through the normal weekly run, in the single-adult columns of the pull table.",
+  "verdict": "route_thin",
+  "detail": "The control route returns fares in the tracked window and the tracked routes return none, so the cache reaches these dates but nobody searches these routes. So does JFK-LAX. Travelpayouts will not serve as a fallback here.",
   "cells": [
     {
       "origin": "MOW",
@@ -17,6 +17,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 16,
       "error": null,
       "is_production": true
@@ -31,6 +32,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 14,
       "error": null,
       "is_production": true
@@ -45,6 +47,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 17,
       "error": null,
       "is_production": true
@@ -59,6 +62,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 6,
       "error": null,
       "is_production": true
@@ -73,6 +77,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": true
@@ -87,6 +92,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": true
@@ -101,6 +107,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": true
@@ -115,6 +122,7 @@
       "shape": "round_trip_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": true
@@ -129,6 +137,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 30,
       "error": null,
       "is_production": false
@@ -143,6 +152,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 30,
       "error": null,
       "is_production": false
@@ -157,6 +167,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 19,
       "error": null,
       "is_production": false
@@ -171,6 +182,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 16,
       "error": null,
       "is_production": false
@@ -185,6 +197,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -199,6 +212,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -213,6 +227,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -227,6 +242,7 @@
       "shape": "one_way_month",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -241,6 +257,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 13,
       "error": null,
       "is_production": false
@@ -255,6 +272,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 12,
       "error": null,
       "is_production": false
@@ -269,6 +287,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -283,6 +302,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -297,6 +317,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -311,6 +332,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -325,6 +347,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -339,6 +362,7 @@
       "shape": "round_trip_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -353,6 +377,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 1,
       "error": null,
       "is_production": false
@@ -367,6 +392,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": true,
+      "tracked": false,
       "fares": 1,
       "error": null,
       "is_production": false
@@ -381,6 +407,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -395,6 +422,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": false,
+      "tracked": false,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -409,6 +437,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -423,6 +452,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -437,6 +467,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
@@ -451,6 +482,7 @@
       "shape": "one_way_dated",
       "market": null,
       "control": false,
+      "tracked": true,
       "fares": 0,
       "error": null,
       "is_production": false
