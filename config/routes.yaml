@@ -102,9 +102,8 @@ routes:
       - absolute_below: 2800
       - lowest_in_days: 30
       - percent_drop: 5
-    # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
-    # price can be judged as genuinely low rather than only low for January.
-    # Full resolution comes back when this window becomes primary in December.
+    # 4 dates x 1 = 4 a run: every January Thursday, party fare only. The
+    # single-adult probe lives on the Saturday route, which out-floors this one.
     compare_split_booking: false
 
   # San Juan, January midweek. Party fare only, as above.
@@ -125,9 +124,8 @@ routes:
       - absolute_below: 2700
       - lowest_in_days: 30
       - percent_drop: 5
-    # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
-    # price can be judged as genuinely low rather than only low for January.
-    # Full resolution comes back when this window becomes primary in December.
+    # 4 dates x 1 = 4 a run: every January Thursday, party fare only. The
+    # single-adult probe lives on the Saturday route, which out-floors this one.
     compare_split_booking: false
 
   # A second look at the shoulder season. The year survey put April's median at
