@@ -509,12 +509,17 @@ function renderCoverage(container, probe) {
         : c.fares > 0
         ? `${c.fares} fare${c.fares === 1 ? "" : "s"}`
         : `<span class="muted-cell">none</span>`;
-      return `<tr>
+      // The row reproducing the weekly query is the reference every other row
+      // is read against, so it has to be findable at a glance.
+      return `<tr class="${c.is_production ? "live" : ""}">
         <td>${esc(c.origin)} &rarr; ${esc(c.destination)}${
           c.control ? ' <span class="tag">control</span>' : ""
         }</td>
         <td>${esc(c.departure_at)}</td>
         <td>${esc(c.horizon)}</td>
+        <td>${esc(c.shape || "—")}${
+          c.is_production ? ' <span class="tag">live query</span>' : ""
+        }</td>
         <td>${esc(c.market || "—")}</td>
         <td${c.error ? ` title="${esc(c.error)}"` : ""}>${result}</td>
       </tr>`;
@@ -531,15 +536,16 @@ function renderCoverage(container, probe) {
     <p class="verdict ${tone}">${esc(probe.detail || probe.verdict)}</p>
     <div class="scroll"><table>
       <thead><tr>
-        <th>Route</th><th>Departure</th><th>Horizon</th><th>Market</th><th>Cached fares</th>
+        <th>Route</th><th>Departure</th><th>Horizon</th><th>Query</th><th>Market</th><th>Cached fares</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
     <p class="legend">The control route is one with known traffic. It is what
       separates "this API has nothing for these dates" from "this API has nothing
-      for these routes" &mdash; and both from a query of ours that is simply
-      wrong. No fare here is a price for a tracked trip, and none of it reaches
-      the charts above.</p>`;
+      for these routes". The query shapes separate both of those from a query of
+      ours that is simply wrong: any shape returning fares where the live query
+      returns none is our bug, not the cache's. No fare here is a price for a
+      tracked trip, and none of it reaches the charts above.</p>`;
   container.appendChild(card);
 }
 

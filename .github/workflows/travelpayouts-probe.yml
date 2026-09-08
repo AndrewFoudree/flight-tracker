@@ -22,6 +22,9 @@ on:
       far:
         description: "Tracked departure month YYYY-MM"
         default: "2027-01"
+      markets:
+        description: "Extra market codes beside the live query (blank: none; us changed nothing on 2026-09-08)"
+        required: false
       max_calls:
         description: "Refuse to run past this many calls"
         default: "24"
@@ -58,6 +61,7 @@ jobs:
             --control "${{ inputs.control }}" \
             --near "${{ inputs.near }}" \
             --far "${{ inputs.far }}" \
+            --markets "${{ inputs.markets }}" \
             --max-calls "${{ inputs.max_calls }}" \
             | tee probe-output.txt
 
