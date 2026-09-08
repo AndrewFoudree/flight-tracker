@@ -476,6 +476,73 @@ function renderGroup(container, routes, rows, runs) {
   });
 }
 
+/* Secondary-source coverage, from data/source_probe.json.
+
+   Deliberately not a chart and deliberately not in prices.csv: the probe prices
+   a control route to find out whether Travelpayouts has any cache at all, and a
+   cached one-adult Denver fare is evidence about an API, not a fare for a trip
+   being tracked. Drawing it as a series would put a price on the page that
+   nobody was ever quoted. What belongs here is the finding.
+
+   Fares the probe finds for a *tracked* route need nothing from this panel:
+   they arrive through the weekly run like any other quote and show up in the
+   single-adult columns of the pull table above. */
+const VERDICT_TONE = {
+  healthy: "good",
+  market_filter: "warn",
+  horizon: "muted",
+  route_thin: "muted",
+  no_cache_at_all: "warn",
+  unreachable: "warn",
+  mixed: "warn",
+  no_data: "muted",
+};
+
+function renderCoverage(container, probe) {
+  if (!probe || !Array.isArray(probe.cells) || !probe.cells.length) return;
+
+  const tone = VERDICT_TONE[probe.verdict] || "muted";
+  const rows = probe.cells
+    .map((c) => {
+      const result = c.error
+        ? `<span class="up">error</span>`
+        : c.fares > 0
+        ? `${c.fares} fare${c.fares === 1 ? "" : "s"}`
+        : `<span class="muted-cell">none</span>`;
+      return `<tr>
+        <td>${esc(c.origin)} &rarr; ${esc(c.destination)}${
+          c.control ? ' <span class="tag">control</span>' : ""
+        }</td>
+        <td>${esc(c.departure_at)}</td>
+        <td>${esc(c.horizon)}</td>
+        <td>${esc(c.market || "—")}</td>
+        <td${c.error ? ` title="${esc(c.error)}"` : ""}>${result}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const card = document.createElement("section");
+  card.className = "route coverage";
+  card.innerHTML = `
+    <header><h2>Secondary source coverage
+      <small>${esc(probe.source)} &middot; checked ${esc(
+        (probe.checked_at || "").slice(0, 10)
+      )}</small></h2></header>
+    <p class="verdict ${tone}">${esc(probe.detail || probe.verdict)}</p>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>Route</th><th>Departure</th><th>Horizon</th><th>Market</th><th>Cached fares</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p class="legend">The control route is one with known traffic. It is what
+      separates "this API has nothing for these dates" from "this API has nothing
+      for these routes" &mdash; and both from a query of ours that is simply
+      wrong. No fare here is a price for a tracked trip, and none of it reaches
+      the charts above.</p>`;
+  container.appendChild(card);
+}
+
 async function main() {
   const container = document.getElementById("routes");
   const subtitle = document.getElementById("subtitle");
@@ -489,18 +556,25 @@ async function main() {
     try {
       runs = parseCsv(await firstThatLoads("runs.csv"));
     } catch (_) { /* no run log yet */ }
+    // Optional too: written only when the coverage probe is run by hand.
+    let probe = null;
+    try {
+      probe = JSON.parse(await firstThatLoads("source_probe.json"));
+    } catch (_) { /* never probed */ }
     const rows = parseCsv(csv);
     const routes = JSON.parse(meta);
     if (!rows.length) {
       container.innerHTML = `<div class="empty">No prices recorded yet. The first
         <code>check-prices</code> run will populate this page.</div>`;
       subtitle.textContent = `${routes.length} route(s) configured`;
+      renderCoverage(container, probe);
       return;
     }
     const last = rows[rows.length - 1].observed_at;
     subtitle.textContent =
       `${routes.length} route(s) · ${rows.length} observations · last checked ${last}`;
     groupRoutes(routes).forEach((group) => renderGroup(container, group, rows, runs));
+    renderCoverage(container, probe);
   } catch (error) {
     container.innerHTML = `<div class="error">${error.message}</div>`;
     subtitle.textContent = "";

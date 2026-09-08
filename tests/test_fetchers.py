@@ -161,6 +161,19 @@ def test_travelpayouts_costs_one_call_per_month_of_the_window(windowed):
     assert fetcher.searches_consumed() == 1
 
 
+def test_travelpayouts_sends_no_market_by_default(windowed):
+    """The live query must stay exactly as it is unless someone changes it.
+
+    src/tp_probe.py compares a market arm against this one, so a market
+    quietly creeping into the default would make the probe compare two
+    identical queries and report nothing.
+    """
+    session = FakeSession(load_fixture("travelpayouts_dsm_den.json"))
+    fetcher = TravelpayoutsFetcher(windowed, token="t", session=session)
+    fetcher.search(windowed.routes[0], Passengers.single_adult())
+    assert "market" not in session.calls[0]["params"]
+
+
 def test_travelpayouts_rejects_an_unsuccessful_response(windowed):
     session = FakeSession({"success": False, "error": "bad token"})
     fetcher = TravelpayoutsFetcher(windowed, token="t", session=session)

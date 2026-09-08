@@ -130,6 +130,20 @@ empty array. Verified on DSM-DEN and DSM-STT for 2027 departures: no cached fare
 at all. It costs nothing to leave enabled in case the cache fills closer to
 departure, but do not plan a route around it without checking first.
 
+Both of those checks were 2027 departures, which cannot tell a cache that does
+not reach 2027 from routes nobody searches at all -- and neither from a query of
+ours that is simply wrong. The `Travelpayouts coverage probe` workflow
+(`src/tp_probe.py`) separates them: it prices a control route with known traffic
+beside the tracked ones, near-term beside the tracked window, with and without an
+explicit `market` parameter. It is manual, spends no SerpAPI search, and is
+therefore safe to run during a blind stretch, when it is the only thing left that
+can learn anything. The findings go to `data/source_probe.json` and render as a
+coverage panel on the dashboard. Fares it finds are deliberately **not** written
+to `prices.csv`: a cached one-adult Denver fare is evidence about an API, not a
+price for a tracked trip. Fares Travelpayouts returns for a *tracked* route need
+nothing extra -- they arrive through the weekly run and appear in the
+single-adult columns of the pull table.
+
 Travelpayouts is unmetered as far as this tracker is concerned and is never
 budget-limited.
 
@@ -431,6 +445,7 @@ comparison forever.
 Two smaller files sit alongside it:
 
 - `data/usage.csv` - API searches consumed, for the budget guard.
+- `data/source_probe.json` - secondary-source coverage, written by the probe.
 - `fare_notes` holds Google's own attribute strings for a fare, such as
   `Carry-on bag not included`. The search response has no fare-brand field -- the
   Booking Options endpoint has one and costs a search per itinerary -- so these

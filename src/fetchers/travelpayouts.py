@@ -28,14 +28,23 @@ ENDPOINT = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates"
 BOOKING_HOST = "https://www.aviasales.com"
 TIMEOUT = 30
 
+# The endpoint serves a cache of real Aviasales user searches and filters it by
+# market. None means "send no market parameter", which is what production has
+# always done. src/tp_probe.py exists to find out whether that is why these
+# routes come back empty; if it is, this constant is the fix.
+DEFAULT_MARKET: str | None = None
+
 
 class TravelpayoutsFetcher(Fetcher):
     name = "travelpayouts"
 
-    def __init__(self, config, token: str | None = None, session=None) -> None:
+    def __init__(
+        self, config, token: str | None = None, session=None, market: str | None = DEFAULT_MARKET
+    ) -> None:
         super().__init__(config)
         self.token = token if token is not None else os.environ.get("TRAVELPAYOUTS_TOKEN", "")
         self.session = session or requests.Session()
+        self.market = market
 
     def searches_consumed(self) -> int:
         return self._searches
@@ -69,18 +78,49 @@ class TravelpayoutsFetcher(Fetcher):
     # --- HTTP -------------------------------------------------------------
 
     def _call(self, route: Route, departure_at: str) -> dict:
+        return self.request(
+            origin=route.origin,
+            destination=route.destination,
+            departure_at=departure_at,
+            currency=self.config.currency_for(route).lower(),
+            one_way=not self._is_round_trip(route),
+            return_at=(
+                route.return_.isoformat()
+                if route.depart is not None and route.return_ is not None
+                else None
+            ),
+        )
+
+    def request(
+        self,
+        *,
+        origin: str,
+        destination: str,
+        departure_at: str,
+        currency: str,
+        one_way: bool,
+        return_at: str | None = None,
+    ) -> dict:
+        """One call to the prices endpoint, for any pair of airports.
+
+        Public because the coverage probe has to send the query this fetcher
+        actually sends. A probe that rebuilt the params itself would drift from
+        production and then answer a question nobody asked.
+        """
         params = {
-            "origin": route.origin,
-            "destination": route.destination,
+            "origin": origin,
+            "destination": destination,
             "departure_at": departure_at,
-            "currency": self.config.currency_for(route).lower(),
+            "currency": currency,
             "sorting": "price",
             "limit": 30,
-            "one_way": "false" if self._is_round_trip(route) else "true",
+            "one_way": "true" if one_way else "false",
             "token": self.token,
         }
-        if route.depart is not None and route.return_ is not None:
-            params["return_at"] = route.return_.isoformat()
+        if self.market:
+            params["market"] = self.market
+        if return_at:
+            params["return_at"] = return_at
 
         response = self.session.get(ENDPOINT, params=params, timeout=TIMEOUT)
         self._count_search()

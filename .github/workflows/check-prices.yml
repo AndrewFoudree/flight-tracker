@@ -100,8 +100,10 @@ jobs:
           sed -i "s|src=\"chart.js\"|src=\"chart.js?v=${GITHUB_SHA}\"|" _site/index.html
           cp data/prices.csv data/routes.json _site/data/
           # Optional, and separate so a missing one never masks a missing price
-          # file: runs.csv does not exist until the first run records an outcome.
+          # file: runs.csv does not exist until the first run records an outcome,
+          # and source_probe.json not until the coverage probe is run by hand.
           cp data/runs.csv _site/data/ 2>/dev/null || true
+          cp data/source_probe.json _site/data/ 2>/dev/null || true
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

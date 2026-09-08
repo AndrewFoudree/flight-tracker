@@ -1,0 +1,117 @@
+name: Travelpayouts coverage probe
+
+# Manual only. Travelpayouts is unmetered and this spends no SerpAPI search, so
+# it is safe to run at any point in the cycle -- including a blind stretch, when
+# it is the only thing that can still learn something.
+#
+# It answers one question: why do the weekly runs get an empty array from this
+# source, and is it something we can fix. See src/tp_probe.py for how the
+# control route separates a query bug from a cache limit.
+on:
+  workflow_dispatch:
+    inputs:
+      pairs:
+        description: "ORIGIN-DESTINATION pairs to probe, comma separated"
+        default: "DSM-DEN,DSM-STT,DSM-SJU"
+      control:
+        description: "The pair with known traffic, used as the reference"
+        default: "DSM-DEN"
+      near:
+        description: "Near-term departure month YYYY-MM (blank: ~2 months out)"
+        required: false
+      far:
+        description: "Tracked departure month YYYY-MM"
+        default: "2027-01"
+      max_calls:
+        description: "Refuse to run past this many calls"
+        default: "24"
+
+permissions:
+  contents: write
+
+# Never race the weekly check for the same data/ push, even though this one
+# spends no allowance.
+concurrency:
+  group: prices
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Probe the cache
+        env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          # tp_probe.py loads config/routes.yaml for the currency, and that file
+          # refuses to parse without a party.
+          PARTY: ${{ vars.PARTY }}
+        run: |
+          python -m src.tp_probe \
+            --pairs "${{ inputs.pairs }}" \
+            --control "${{ inputs.control }}" \
+            --near "${{ inputs.near }}" \
+            --far "${{ inputs.far }}" \
+            --max-calls "${{ inputs.max_calls }}" \
+            | tee probe-output.txt
+
+      - name: Publish the table to the run summary
+        if: always()
+        run: |
+          echo '## Travelpayouts cache coverage' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat probe-output.txt >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # The findings, not the fares: data/source_probe.json is what the
+      # dashboard reads. commit_data.py is a no-op when the tree is clean.
+      - name: Commit the findings
+        if: always()
+        run: |
+          git config user.name "flight-bot"
+          git config user.email "flight-bot@users.noreply.github.com"
+          rm -f probe-output.txt
+          python scripts/commit_data.py "travelpayouts probe: $(date -u +%Y-%m-%d)"
+
+  # A push made with GITHUB_TOKEN cannot trigger publish-dashboard.yml, so the
+  # coverage panel would not appear until something else deployed. Deploy here.
+  publish:
+    needs: probe
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main         # the tip, including the commit the probe job pushed
+
+      - name: Stage the site
+        run: |
+          mkdir -p _site/data
+          cp dashboard/* _site/
+          sed -i "s|src=\"chart.js\"|src=\"chart.js?v=${GITHUB_SHA}\"|" _site/index.html
+          cp data/prices.csv data/routes.json _site/data/
+          cp data/runs.csv _site/data/ 2>/dev/null || true
+          cp data/source_probe.json _site/data/ 2>/dev/null || true
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
