@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from src import hub_survey
+from src import budget, hub_survey
 from src.models import Passengers
 from tests.conftest import make_config, make_window_config, price_row
 
@@ -40,7 +40,7 @@ def test_per_run_cost_counts_the_split_booking_probe():
 
 def test_it_refuses_when_the_balance_cannot_be_read(monkeypatch):
     """A manual spend against a shared budget never guesses at the balance."""
-    monkeypatch.setattr(hub_survey, "searches_left", lambda: None)
+    monkeypatch.setattr(budget, "searches_left", lambda: None)
     ok, why = hub_survey.affordable(make_config(), needed=24, reserve_runs=4)
     assert not ok
     assert "could not read the plan balance" in why
@@ -48,21 +48,21 @@ def test_it_refuses_when_the_balance_cannot_be_read(monkeypatch):
 
 def test_it_refuses_when_the_scheduled_runs_would_be_starved(monkeypatch):
     """2 a run x 4 runs + 20 reserve = 28 protected, leaving 12 of 40 spare."""
-    monkeypatch.setattr(hub_survey, "searches_left", lambda: 40)
+    monkeypatch.setattr(budget, "searches_left", lambda: 40)
     ok, why = hub_survey.affordable(make_config(), needed=24, reserve_runs=4)
     assert not ok
     assert "12 spare against 24 needed" in why
 
 
 def test_it_runs_when_there_is_headroom_past_the_protected_runs(monkeypatch):
-    monkeypatch.setattr(hub_survey, "searches_left", lambda: 200)
+    monkeypatch.setattr(budget, "searches_left", lambda: 200)
     ok, why = hub_survey.affordable(make_config(), needed=24, reserve_runs=4)
     assert ok
     assert "172 spare against 24 needed" in why
 
 
 def test_reserving_more_runs_protects_more(monkeypatch):
-    monkeypatch.setattr(hub_survey, "searches_left", lambda: 60)
+    monkeypatch.setattr(budget, "searches_left", lambda: 60)
     assert hub_survey.affordable(make_config(), 24, reserve_runs=4)[0]
     assert not hub_survey.affordable(make_config(), 24, reserve_runs=9)[0]
 

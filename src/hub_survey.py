@@ -26,8 +26,8 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+from .budget import affordable, per_run_cost
 from .config import Config, load_config
-from .fetchers.account import searches_left
 from .fetchers.serpapi import SerpApiFetcher
 from .models import Passengers, Quote, utcnow
 from .storage import PRICE_COLUMNS, PriceRow, _append, append_usage, quote_to_row, read_history
@@ -58,40 +58,6 @@ def build_leg_config(base: Config, origin: str, destination: str,
         }
     ]
     return Config.model_validate(raw)
-
-
-def per_run_cost(config: Config) -> int:
-    """What one scheduled run of the live config spends on SerpAPI."""
-    return sum(
-        len(config.search_dates_for(route)) * (2 if route.compare_split_booking else 1)
-        for route in config.routes
-    )
-
-
-def affordable(config: Config, needed: int, reserve_runs: int) -> tuple[bool, str]:
-    """Whether this sweep can run without starving the scheduled runs.
-
-    The plan balance is the provider's, not the local ledger's, because the
-    ledger counts calendar months while SerpAPI bills on its own renewal date.
-    A sweep that cannot see the balance refuses rather than guesses: this is a
-    manual spend against a budget the weekly runs depend on.
-    """
-    left = searches_left()
-    if left is None:
-        return False, (
-            "could not read the plan balance from SerpAPI, so the cost to the "
-            "scheduled runs is unknown. Re-run when the account endpoint answers."
-        )
-    protected = per_run_cost(config) * reserve_runs + config.budget.reserve
-    spare = left - protected
-    detail = (
-        f"{left} searches left, {protected} protected "
-        f"({reserve_runs} scheduled run(s) plus a {config.budget.reserve} reserve), "
-        f"so {spare} spare against {needed} needed"
-    )
-    if needed > spare:
-        return False, f"not enough headroom: {detail}."
-    return True, detail
 
 
 def cheapest(quotes: list[Quote]) -> Quote | None:

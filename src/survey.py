@@ -18,6 +18,7 @@ from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
 
+from .budget import affordable
 from .config import Config, load_config
 from .fetchers.serpapi import SerpApiFetcher
 from .models import Quote, utcnow
@@ -110,6 +111,16 @@ def run(args: argparse.Namespace) -> int:
         )
         return 2
 
+    # --max-searches above only caps what this sweep asks for; it says nothing
+    # about what is left or what the weekly runs still need. Checked against the
+    # live config, not the synthetic one built above, because it is the real
+    # routes whose runs are being protected.
+    ok, detail = affordable(base, len(pairs), args.reserve_runs)
+    log.info("budget: %s", detail)
+    if not ok:
+        log.error("refusing to run: the scheduled runs come first.")
+        return 3
+
     fetcher = SerpApiFetcher(config)
     try:
         quotes = fetcher.search(route, passengers)
@@ -139,6 +150,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--latest", required=True, help="last departure date, YYYY-MM-DD")
     parser.add_argument("--nights", type=int, default=7)
     parser.add_argument("--step", type=int, default=14, help="days between sampled departures")
+    parser.add_argument(
+        "--reserve-runs", type=int, default=4,
+        help="scheduled runs to leave funded before spending anything here",
+    )
     parser.add_argument("--max-searches", type=int, default=40, help="refuse to run past this")
     parser.add_argument("--config", default="config/routes.yaml", help="source of party defaults")
     parser.add_argument("--out", default=str(SURVEY_PATH))

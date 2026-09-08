@@ -2,6 +2,9 @@ name: Survey a year of fares
 
 # One-off, manual only. A year-wide sweep costs a search per sampled departure,
 # so running it on a schedule would exhaust the month's allowance in an afternoon.
+# Manual is not the same as safe: the 2026-08-31 sweep took 192 of 250 searches
+# by hand and left the weekly tracker blind for the rest of the cycle. It now
+# refuses unless reserve_runs scheduled runs are still funded afterwards.
 on:
   workflow_dispatch:
     inputs:
@@ -23,6 +26,9 @@ on:
       step:
         description: "Days between sampled departures"
         default: "14"
+      reserve_runs:
+        description: "Scheduled runs to leave funded before spending anything here"
+        default: "4"
       max_searches:
         description: "Refuse to run past this many searches"
         default: "40"
@@ -57,6 +63,7 @@ jobs:
             --latest "${{ inputs.latest }}" \
             --nights "${{ inputs.nights }}" \
             --step "${{ inputs.step }}" \
+            --reserve-runs "${{ inputs.reserve_runs }}" \
             --max-searches "${{ inputs.max_searches }}" \
             | tee survey-output.txt
 

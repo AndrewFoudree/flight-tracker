@@ -115,6 +115,21 @@ rather than all at once. `tests/test_config.py` reads the cron out of the workfl
 and asserts this, so adding a route or changing the cadence fails a test instead
 of quietly overrunning the plan mid-cycle.
 
+**A manual sweep is spending the weekly runs' allowance.** This is the one that
+has actually bitten: on 2026-08-31 a year survey took 192 of the plan's 250
+searches, and the cycle never recovered - 2026-09-06 recorded NA on all six
+routes with 6 searches left against a reserve of 20. The sweep was well inside
+its own `--max-searches` cap, because that cap only limits what the sweep asks
+for and says nothing about what is left or what the scheduled runs still need.
+
+`src/budget.py` is the check that was missing. Every manual entry point calls
+`affordable()` before spending: it reads the balance from SerpAPI, subtracts
+`--reserve-runs` weekly runs plus `budget.reserve`, and refuses if the sweep does
+not fit in what is left. At the live 32 a run and the default 4 reserved runs,
+148 searches are protected, so a manual sweep can never take a fresh cycle below
+four funded weekly runs. If the balance cannot be read at all it refuses rather
+than guessing: unknown is not the same as fine.
+
 Two things multiply the cost, and both are opt-in:
 
 - **`compare_split_booking: true`** doubles a route's SerpAPI cost (party query
@@ -227,7 +242,8 @@ scheduled**, and it writes to `data/hub_survey.csv` rather than `prices.csv`: a
 two-ticket itinerary is a different product from a through-fare and must not land
 in the same series or the same chart. The weekly tracker stays single-ticket.
 
-It also refuses to run if the spend would starve the scheduled runs. `--reserve-runs`
+It also refuses to run if the spend would starve the scheduled runs, through the
+shared guard in `src/budget.py` described under *Budget* above. `--reserve-runs`
 (default 4) keeps that many weekly runs funded, and the check reads the balance
 from SerpAPI rather than the local ledger, because the ledger counts calendar
 months while the plan bills on its own renewal date. If the balance cannot be
@@ -425,6 +441,10 @@ Re-run the survey when plans change:
 ```
 Actions -> Survey a year of fares -> Run workflow
 ```
+
+It refuses if the sweep would leave fewer than `reserve_runs` weekly runs funded,
+so a survey can no longer blind the tracker for the rest of a cycle. Lower
+`reserve_runs` deliberately if a sweep matters more than the next few Sundays.
 
 ## Data
 
