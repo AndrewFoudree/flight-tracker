@@ -1,0 +1,130 @@
+{
+  "source": "travelpayouts",
+  "checked_at": "2026-09-08T17:35:32Z",
+  "control": "DSM-DEN",
+  "currency": "USD",
+  "verdict": "no_cache_at_all",
+  "detail": "Every call came back empty, including a near-term control route with real traffic. That points at the query or the account rather than at these routes: check the token and whether the endpoint still serves this plan.",
+  "cells": [
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "departure_at": "2026-11",
+      "horizon": "near",
+      "market": null,
+      "control": true,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "departure_at": "2027-01",
+      "horizon": "far",
+      "market": null,
+      "control": true,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "STT",
+      "departure_at": "2026-11",
+      "horizon": "near",
+      "market": null,
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "STT",
+      "departure_at": "2027-01",
+      "horizon": "far",
+      "market": null,
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "SJU",
+      "departure_at": "2026-11",
+      "horizon": "near",
+      "market": null,
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "SJU",
+      "departure_at": "2027-01",
+      "horizon": "far",
+      "market": null,
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "departure_at": "2026-11",
+      "horizon": "near",
+      "market": "us",
+      "control": true,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "DEN",
+      "departure_at": "2027-01",
+      "horizon": "far",
+      "market": "us",
+      "control": true,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "STT",
+      "departure_at": "2026-11",
+      "horizon": "near",
+      "market": "us",
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "STT",
+      "departure_at": "2027-01",
+      "horizon": "far",
+      "market": "us",
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "SJU",
+      "departure_at": "2026-11",
+      "horizon": "near",
+      "market": "us",
+      "control": false,
+      "fares": 0,
+      "error": null
+    },
+    {
+      "origin": "DSM",
+      "destination": "SJU",
+      "departure_at": "2027-01",
+      "horizon": "far",
+      "market": "us",
+      "control": false,
+      "fares": 0,
+      "error": null
+    }
+  ]
+}
