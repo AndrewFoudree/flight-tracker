@@ -106,12 +106,7 @@ jobs:
 
       - name: Stage the site
         run: |
-          mkdir -p _site/data
-          cp dashboard/* _site/
-          sed -i "s|src=\"chart.js\"|src=\"chart.js?v=${GITHUB_SHA}\"|" _site/index.html
-          cp data/prices.csv data/routes.json _site/data/
-          cp data/runs.csv _site/data/ 2>/dev/null || true
-          cp data/source_probe.json _site/data/ 2>/dev/null || true
+          bash scripts/stage_site.sh "$GITHUB_SHA"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -13,14 +13,33 @@ import csv
 
 import pytest
 
+import datetime
+
 from src.fare_baseline import (
     MIN_CARRIER_SHARE,
     both_directions,
     carriers_seen,
+    latest_published,
+    previous_quarter,
     summarise,
     tracked_pairs,
     weighted_percentile,
 )
+
+
+def freeze(monkeypatch, today: datetime.date):
+    class FrozenDate(datetime.date):
+        @classmethod
+        def today(cls):
+            return today
+
+    monkeypatch.setattr("src.fare_baseline.date", FrozenDate)
+
+
+def only_published(monkeypatch, releases: set[tuple[int, int]]):
+    monkeypatch.setattr(
+        "src.fare_baseline.is_published", lambda year, quarter: (year, quarter) in releases
+    )
 
 
 def market(origin="DSM", dest="STT", fare="400", passengers="1", carrier="AA", bulk="0"):
@@ -124,6 +143,48 @@ class TestCarriers:
         rows = [market(carrier="ZZ", passengers="50"), market(carrier="AA", passengers="50")]
         result = summarise(rows, "DSM", "STT", seen=set())
         assert "ZZ" in {c.name for c in result.carriers}
+
+
+class TestLatestPublished:
+    def test_previous_quarter_wraps_the_year(self):
+        assert previous_quarter(2026, 1) == (2025, 4)
+        assert previous_quarter(2026, 3) == (2026, 2)
+
+    def test_unpinned_walks_back_quarter_by_quarter(self, monkeypatch):
+        freeze(monkeypatch, datetime.date(2026, 9, 9))
+        only_published(monkeypatch, {(2025, 2), (2025, 1)})
+        assert latest_published() == (2025, 2)
+
+    def test_pinning_a_quarter_skips_a_newer_release_of_another(self, monkeypatch):
+        # The whole reason the schedule pins Q1: DB1B has no month field, so
+        # taking 2025 Q2 because it happens to be newer would baseline a January
+        # trip against April, May and June.
+        freeze(monkeypatch, datetime.date(2026, 9, 9))
+        only_published(monkeypatch, {(2025, 2), (2025, 1)})
+        assert latest_published(1) == (2025, 1)
+
+    def test_pinned_quarter_prefers_the_newest_year(self, monkeypatch):
+        freeze(monkeypatch, datetime.date(2026, 9, 9))
+        only_published(monkeypatch, {(2026, 1), (2025, 1), (2024, 1)})
+        assert latest_published(1) == (2026, 1)
+
+    def test_pinned_quarter_never_asks_for_one_still_running(self, monkeypatch):
+        # In Q1 2026, "the latest Q1" cannot be 2026 Q1: the quarter has not
+        # finished, let alone been published.
+        freeze(monkeypatch, datetime.date(2026, 2, 1))
+        seen = []
+        monkeypatch.setattr(
+            "src.fare_baseline.is_published",
+            lambda year, quarter: seen.append((year, quarter)) or (year, quarter) == (2025, 1),
+        )
+        assert latest_published(1) == (2025, 1)
+        assert (2026, 1) not in seen
+
+    def test_gives_up_rather_than_looping_forever(self, monkeypatch):
+        freeze(monkeypatch, datetime.date(2026, 9, 9))
+        only_published(monkeypatch, set())
+        with pytest.raises(SystemExit):
+            latest_published(1, back=3)
 
 
 class TestRouteReading:

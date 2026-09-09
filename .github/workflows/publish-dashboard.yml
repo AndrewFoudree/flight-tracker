@@ -31,23 +31,7 @@ jobs:
       - name: Stage the site
         # The page fetches data/ relative to itself, so the history ships with it.
         run: |
-          mkdir -p _site/data
-          cp dashboard/* _site/
-          # GitHub Pages serves assets with max-age=600, so a deploy is invisible
-          # for ten minutes unless the URL changes. Stamping the commit onto the
-          # script src makes every publish take effect on the next load instead
-          # of leaving people hard-refreshing to see their own data.
-          sed -i "s|src=\"chart.js\"|src=\"chart.js?v=${GITHUB_SHA}\"|" _site/index.html
-          cp data/prices.csv data/routes.json _site/data/
-          # Optional, and separate so a missing one never masks a missing price
-          # file: runs.csv does not exist until the first run records an outcome,
-          # and the two hand-run panels not until someone runs them. Each panel
-          # renders only if its file loads, so a file missed here is invisible
-          # rather than broken -- which is exactly how fare_baseline.json shipped
-          # to a live 404 with a green build. Adding a panel means adding it here.
-          cp data/runs.csv _site/data/ 2>/dev/null || true
-          cp data/source_probe.json _site/data/ 2>/dev/null || true
-          cp data/fare_baseline.json _site/data/ 2>/dev/null || true
+          bash scripts/stage_site.sh "$GITHUB_SHA"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

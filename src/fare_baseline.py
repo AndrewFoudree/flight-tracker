@@ -40,6 +40,7 @@ import json
 import logging
 import zipfile
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from pathlib import Path
 
 import requests
@@ -158,6 +159,60 @@ def carriers_seen() -> set[str]:
         return set()
     with PRICES_PATH.open(newline="", encoding="utf-8") as handle:
         return {row["carrier"] for row in csv.DictReader(handle) if row.get("carrier")}
+
+
+def previous_quarter(year: int, quarter: int) -> tuple[int, int]:
+    return (year - 1, 4) if quarter == 1 else (year, quarter - 1)
+
+
+def is_published(year: int, quarter: int) -> bool:
+    """Whether BTS has released this quarter, asked with a HEAD request."""
+    response = requests.head(
+        PREZIP.format(year=year, quarter=quarter), timeout=60, allow_redirects=True
+    )
+    return response.status_code == 200
+
+
+def latest_published(quarter: int | None = None, back: int = 8) -> tuple[int, int]:
+    """The most recent release BTS has actually published.
+
+    Releases run roughly two quarters behind, but the lag is not fixed and one
+    can slip. Probing costs a HEAD request per miss and removes the only
+    argument a schedule would otherwise have to guess -- which is the difference
+    between a quarterly cron that works and one that 404s until someone notices.
+
+    `quarter` pins which quarter to look for, and pinning it is almost always
+    what you want. DB1BMarket has no month field, so a quarter is the finest
+    grain there is: Q1 is January with February and March, Q2 is April with May
+    and June. Taking whatever was published most recently would silently baseline
+    a January trip against spring fares, which is a different market. The
+    schedule pins Q1 because January is the window being bought.
+    """
+    today = date.today()
+    year, current = today.year, (today.month - 1) // 3 + 1
+    if quarter is None:
+        for _ in range(back):
+            year, current = previous_quarter(year, current)
+            if is_published(year, current):
+                log.info("latest published release is %s Q%s", year, current)
+                return year, current
+        raise SystemExit(
+            f"No DB1B release found in the {back} quarters before {today}. "
+            "Check whether the BTS URL scheme has changed."
+        )
+
+    # Pinned: step back a year at a time on that one quarter.
+    if quarter >= current:
+        year -= 1
+    for _ in range(back):
+        if is_published(year, quarter):
+            log.info("latest published Q%s is %s Q%s", quarter, year, quarter)
+            return year, quarter
+        year -= 1
+    raise SystemExit(
+        f"No published Q{quarter} found in the {back} years before {today}. "
+        "Check whether the BTS URL scheme has changed."
+    )
 
 
 def download(year: int, quarter: int, cache: Path) -> Path:
@@ -281,8 +336,10 @@ def build(year: int, quarter: int, cache: Path, routes: Path = ROUTES_PATH) -> d
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build the DOT fare baseline.")
-    parser.add_argument("--year", type=int, required=True)
-    parser.add_argument("--quarter", type=int, required=True, choices=(1, 2, 3, 4))
+    # Both optional: omit them and the latest published quarter is found by
+    # probing, which is what the quarterly schedule does.
+    parser.add_argument("--year", type=int)
+    parser.add_argument("--quarter", type=int, choices=(1, 2, 3, 4))
     parser.add_argument(
         "--cache", type=Path, default=Path(".cache"),
         help="where to keep the downloaded zip (default: .cache, gitignored)",
@@ -291,7 +348,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    payload = build(args.year, args.quarter, args.cache)
+    if args.year and args.quarter:
+        year, quarter = args.year, args.quarter
+    elif args.year:
+        parser.error("--year needs --quarter; a year alone names four releases")
+    else:
+        # --quarter alone means "the newest published one of those", which is
+        # how the schedule stays on Q1 without being told the year.
+        year, quarter = latest_published(args.quarter)
+    payload = build(year, quarter, args.cache)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     log.info("wrote %s", args.out)

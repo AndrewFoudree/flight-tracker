@@ -1,0 +1,102 @@
+name: Fare baseline
+
+# Quarterly, so nobody has to remember to run it.
+#
+# Pinned to Q1 on purpose. DB1BMarket has no month field, so a quarter is the
+# finest grain available: Q1 is January with February and March, Q2 is April with
+# May and June. January is the window being bought, so taking whichever release
+# happened to be newest would silently baseline the trip against spring fares.
+# The year is found by probing, because the BTS release lag is not fixed.
+#
+# Costs nothing to run against a quarter that is already current: the summary
+# comes out identical and commit_data.py is a no-op on a clean tree. That also
+# means a rerun correctly picks up a carrier that has since appeared in
+# prices.csv and should no longer be flagged as unseen.
+on:
+  schedule:
+    - cron: "0 6 15 1,4,7,10 *"   # 15th of Jan/Apr/Jul/Oct, 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      quarter:
+        description: "Quarter to baseline (1 = January, the tracked window)"
+        default: "1"
+      year:
+        description: "Pin a year as well (blank: newest published of that quarter)"
+        required: false
+
+permissions:
+  contents: write
+
+# The commit touches data/, so never race the weekly price push.
+concurrency:
+  group: prices
+  cancel-in-progress: false
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      # No PARTY here, and that is deliberate: the baseline reads city pairs
+      # straight from routes.yaml, so public data about two airports never needs
+      # the private household split to build.
+      - name: Build the baseline
+        env:
+          QUARTER: ${{ inputs.quarter || '1' }}
+          YEAR: ${{ inputs.year }}
+        run: |
+          args="--quarter $QUARTER"
+          if [ -n "$YEAR" ]; then args="$args --year $YEAR"; fi
+          python -m src.fare_baseline $args | tee baseline-output.txt
+
+      - name: Publish the summary to the run log
+        if: always()
+        run: |
+          echo '## Fare baseline' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat baseline-output.txt >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Commit the summary
+        if: always()
+        run: |
+          git config user.name "flight-bot"
+          git config user.email "flight-bot@users.noreply.github.com"
+          rm -f baseline-output.txt
+          python scripts/commit_data.py "fare baseline: $(date -u +%Y-%m-%d)"
+
+  # A push made with GITHUB_TOKEN cannot trigger publish-dashboard.yml, so the
+  # panel would not refresh until something else deployed. Deploy here.
+  publish:
+    needs: baseline
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main         # the tip, including the commit the baseline job pushed
+      - name: Stage the site
+        run: |
+          bash scripts/stage_site.sh "$GITHUB_SHA"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

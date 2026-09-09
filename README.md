@@ -192,9 +192,21 @@ good price for DSM-STT, or does that market normally clear lower?
 
 `src/fare_baseline.py` answers it from the US DOT's Airline Origin and
 Destination Survey (DB1B) - a 10% sample of tickets actually sold, public domain,
-no key, published quarterly. Run it when a new quarter lands:
+no key, published quarterly.
+
+**It refreshes itself.** The `Fare baseline` workflow runs quarterly and needs no
+arguments; there is nothing to remember to run. It is pinned to **Q1** on purpose,
+because DB1BMarket has no month field and a quarter is therefore the finest grain
+available: Q1 is January with February and March, Q2 is April with May and June.
+January is the window being bought, so taking whichever release happened to be
+newest would quietly baseline the trip against spring fares. The *year* is found
+by probing, because the BTS release lag is roughly two quarters but not fixed.
+
+To run it by hand, or to look at a different quarter:
 
 ```bash
+python -m src.fare_baseline                        # newest published release
+python -m src.fare_baseline --quarter 1            # newest published Q1
 python -m src.fare_baseline --year 2025 --quarter 1
 ```
 
@@ -213,9 +225,23 @@ business requiring the private `PARTY` split to build.
 | DSM-SJU | 409 | $335 | $642 | $1,158 | $466 - **33rd pct** |
 
 Round-trip equivalents per person. The STT floor is genuinely a bottom-decile
-fare; the SJU floor is not. That matters, because the $2,700 SJU threshold was
-calibrated to nothing - the README said so - and this is the first evidence that
-it sits looser than STT's.
+fare; the SJU floor is not.
+
+**What that did and did not justify.** It is tempting to read the percentile gap
+as "the SJU threshold is too loose", and that is wrong twice over. The SJU bar
+was never uncalibrated - it was anchored to San Juan's own $2,796 bucket floor -
+and it was not misfiring: neither destination's `absolute_below` has ever fired,
+on any departure. Nor can these percentiles set a bar directly. Matching STT's
+market position on SJU would mean a bar below its 10th percentile, or $1,890 for
+six seats, which group inventory cannot reach and which would simply never fire.
+
+What the gap does justify is a **parity** fix. STT's $2,800 asks for a 5.25%
+break below its $2,955 floor; SJU's $2,700 asked for 3.43% below its $2,796.
+These two destinations are meant to be held to one standard, so on 2026-09-09 the
+SJU bar moved to **$2,650** - the same 5.25%. In market terms it is still the
+easier bar, around the 30th percentile against STT's sub-10th, and that residual
+gap is the fare-bucket thesis showing up in the data: San Juan has cheap
+individual inventory that six seats in one bucket cannot reach.
 
 **It found a carrier the weekly run cannot see.** SerpAPI reports what Google
 chooses to show; DB1B reports who passengers were actually ticketed on. Frontier
