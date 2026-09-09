@@ -655,9 +655,16 @@ and maintenance someone else carries. That is the product.
 **Travelpayouts prices one adult.** Its v3 prices endpoints return cached
 single-adult fares and accept no passenger parameters, so this tracker records them
 as `adults=1` quotes and never as a party total. Multiplying a single fare by the
-is exactly the fare-bucket error described above. Treat Travelpayouts as a trend
-signal and as the free half of the split-booking comparison; SerpAPI is the source
+party size is exactly the fare-bucket error described above. SerpAPI is the source
 of truth for real party pricing.
+
+That single-adult shape was meant to make Travelpayouts the free half of the
+split-booking comparison - an unmetered source already priced per adult is exactly
+what that comparison wants - and it does not work out that way. The probe settled
+on 2026-09-08 that its cache holds nothing for DSM-STT or DSM-SJU, so it
+contributes no fares at all, and the single-adult side is bought from SerpAPI like
+the party side. It stays enabled because it is free and the cache may fill closer
+to departure. See *Budget* above.
 
 **Do not scrape Google Flights directly.** Heavy JavaScript, unstable structure,
 active anti-bot measures, and a terms-of-service violation. SerpAPI's allowance

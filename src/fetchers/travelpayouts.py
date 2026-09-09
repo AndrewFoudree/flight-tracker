@@ -1,13 +1,26 @@
 """Travelpayouts cheap-fares (Aviasales Data API v3).
 
-Secondary source, and effectively unmetered, so flexible-date routes lean on it.
+Secondary source, and effectively unmetered, so it costs nothing to leave on.
 
 Important limitation, verified against the v3 prices endpoints: this API returns
 *cached one-adult fares* and accepts no passenger parameters. It therefore emits
 quotes with adults=1, children=0, infants=0 and never a fabricated party total --
-multiplying a single fare by seven is precisely the error that fare buckets make
-wrong. Treat it as a trend signal, and as the free half of the split-booking
-comparison. SerpAPI remains the source of truth for real party pricing.
+multiplying a single fare by the party size is precisely the error that fare
+buckets make wrong. SerpAPI is the source of truth for real party pricing.
+
+What this is not, settled 2026-09-08: a fallback, or the free half of the
+split-booking comparison. Both were the intent -- an unmetered source already
+priced per adult is exactly what that comparison wants, which is why main.py
+asks this fetcher for the party query only and never a second single-adult one --
+and neither survived contact with these routes. The cache is built from real
+Aviasales searches and holds nothing for DSM-STT or DSM-SJU, so it contributes no
+fares at all, and the single-adult side is bought from SerpAPI like the party
+side.
+
+It stays enabled because it is free and the cache may fill as departure nears,
+in which case fares arrive through the weekly run with no work here. The evidence
+is in src/tp_probe.py and the README's *Budget* section; whether it has changed
+is in data/source_probe.json.
 """
 
 from __future__ import annotations
