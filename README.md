@@ -600,7 +600,7 @@ The landscape moves, and one of these will change again. Sources are pluggable:
 the minimum per route. One source failing is caught and logged; the rest of the run
 carries on.
 
-### API landscape, as of August 2026
+### API landscape, as of September 2026
 
 | Source | Status | Free allowance | Notes |
 |---|---|---|---|
