@@ -476,6 +476,167 @@ function renderGroup(container, routes, rows, runs) {
   });
 }
 
+/* What the market actually charges, from data/fare_baseline.json (US DOT DB1B).
+
+   Every series above is SerpAPI, so the page can only ever say a fare is the
+   lowest *we have seen*. This is the one panel sourced from outside: a sample of
+   tickets actually sold on these city pairs, which is what makes "is this a good
+   price" answerable at all rather than only "is this the best price this month".
+
+   Deliberately a band and not a series. DB1B lags a quarter or two, has no month
+   field, and prorates round trips into two directional records, so plotting it
+   beside the weekly history would imply a precision it does not have and put a
+   line on the page nobody was ever quoted. The band is the finding. */
+
+/* 33rd, not 33th. Percentiles here run 10-90, but the teens exception still has
+   to be spelled out or 11-13 come out wrong. */
+function ordinal(n) {
+  const teens = n % 100;
+  if (teens >= 11 && teens <= 13) return `${n}th`;
+  return `${n}${["th", "st", "nd", "rd"][n % 10] || "th"}`;
+}
+
+/* deciles[i] is the (i+1)*10th percentile. Linear interpolation between them is
+   as much resolution as nine numbers honestly support. */
+function percentileOf(deciles, value) {
+  if (!Array.isArray(deciles) || deciles.length < 2) return null;
+  const last = deciles.length - 1;
+  if (value <= deciles[0]) return { pct: 10, beyond: "below" };
+  if (value >= deciles[last]) return { pct: 90, beyond: "above" };
+  for (let i = 0; i < last; i += 1) {
+    if (value <= deciles[i + 1]) {
+      const span = deciles[i + 1] - deciles[i];
+      const frac = span > 0 ? (value - deciles[i]) / span : 0;
+      return { pct: (i + 1) * 10 + frac * 10, beyond: null };
+    }
+  }
+  return { pct: 90, beyond: null };
+}
+
+/* Cheapest per-seat price ever recorded on a whole-party booking, by
+   destination. Party rows only: DB1B counts individually sold tickets, and the
+   single-adult probe is already a different product from six seats in one
+   bucket. Computed here rather than stored in the JSON because it moves with
+   every run, and a percentile baked in on a Tuesday is wrong by Sunday. */
+function partyFloors(rows) {
+  const best = {};
+  rows.forEach((row) => {
+    const seats = Number(row.seats);
+    const total = Number(row.total_price);
+    if (!(seats > 1) || !(total > 0)) return;
+    const perSeat = total / seats;
+    if (best[row.destination] === undefined || perSeat < best[row.destination]) {
+      best[row.destination] = perSeat;
+    }
+  });
+  return best;
+}
+
+function renderBaseline(container, baseline, rows) {
+  if (!baseline || !Array.isArray(baseline.pairs) || !baseline.pairs.length) return;
+
+  const currency = (rows[0] && rows[0].currency) || "USD";
+  const floors = partyFloors(rows);
+  const unseen = [];
+
+  const blocks = baseline.pairs
+    .map((p) => {
+      const deciles = p.rt_deciles || [];
+      if (deciles.length < 2) return "";
+      const floor = floors[p.destination];
+      const has = floor !== undefined;
+      const top = deciles[deciles.length - 1];
+      const rawLo = has ? Math.min(deciles[0], floor) : deciles[0];
+      const rawHi = has ? Math.max(top, floor) : top;
+      // A fare at the very bottom of the market is the good case and also the
+      // one that would hang half off the end of the bar, so the scale carries a
+      // little air at each end rather than clipping the marker that matters.
+      const pad = (rawHi - rawLo) * 0.04;
+      const lo = rawLo - pad;
+      const hi = rawHi + pad;
+      const at = (v) => (hi > lo ? ((v - lo) / (hi - lo)) * 100 : 0);
+
+      (p.carriers || [])
+        .filter((c) => !c.seen_by_tracker)
+        .forEach((c) => unseen.push({ ...c, pair: `${p.origin}-${p.destination}` }));
+
+      const found = has ? percentileOf(deciles, floor) : null;
+      let readout;
+      if (!found) {
+        readout = `<span class="muted-cell">No party fare recorded for this
+          destination yet.</span>`;
+      } else {
+        const place =
+          found.beyond === "below" ? "at or below the <strong>10th percentile</strong>"
+          : found.beyond === "above" ? "above the <strong>90th percentile</strong>"
+          : `around the <strong>${ordinal(Math.round(found.pct))} percentile</strong>`;
+        readout = `Best party fare so far
+          <strong>${money(floor, currency)}</strong> a seat &mdash; ${place} of what
+          this market charged.`;
+      }
+
+      const carriers = (p.carriers || [])
+        .map((c) => `${esc(c.name)} ${Math.round(c.share * 100)}%${
+          c.seen_by_tracker ? "" : ' <span class="tag">unseen</span>'
+        }`)
+        .join(" &middot; ");
+
+      return `<div class="pair">
+        <div class="pair-head">
+          <strong>${esc(p.origin)} &rarr; ${esc(p.destination)}</strong>
+          <span class="pair-n">${p.markets} sampled tickets &middot;
+            ~${p.passengers.toLocaleString()} passengers</span>
+        </div>
+        <div class="band">
+          <div class="band-range" style="left:${at(deciles[0])}%;
+               width:${at(deciles[deciles.length - 1]) - at(deciles[0])}%"></div>
+          <div class="band-tick" style="left:${at(p.rt_median)}%"></div>
+          ${has ? `<div class="band-mark" style="left:${at(floor)}%"></div>` : ""}
+        </div>
+        <div class="band-scale">
+          <span>p10 ${money(deciles[0], currency)}</span>
+          <span>median ${money(p.rt_median, currency)}</span>
+          <span>p90 ${money(deciles[deciles.length - 1], currency)}</span>
+        </div>
+        <p class="pair-read">${readout}</p>
+        <p class="pair-carriers">${carriers}</p>
+      </div>`;
+    })
+    .join("");
+
+  /* The one finding here the weekly run structurally cannot produce. SerpAPI
+     reports what Google chooses to show; DB1B reports who passengers were
+     actually ticketed on. A carrier with real traffic and no quote in the whole
+     history is the one kind of cheap fare this tracker would never find. */
+  const flagged = unseen.length
+    ? `<p class="unseen">${unseen
+        .map((c) => `<strong>${esc(c.name)}</strong> carried roughly
+           ${c.passengers.toLocaleString()} passengers on ${esc(c.pair)}
+           (${Math.round(c.share * 100)}% of the market) and has never appeared in
+           a tracker quote.`)
+        .join(" ")}</p>`
+    : "";
+
+  const card = document.createElement("section");
+  card.className = "route baseline";
+  card.innerHTML = `
+    <header><h2>What this market charges
+      <small>US DOT origin &amp; destination survey &middot;
+        ${esc(baseline.release)} &middot; ${esc(baseline.sample_rate_pct)}% sample of
+        tickets sold</small></h2></header>
+    ${blocks}
+    ${flagged}
+    <p class="legend">Round-trip equivalents per person, from tickets actually
+      sold &mdash; not quotes, and not bookable. The survey prices one direction
+      at a time, so these are doubled; it pools a whole quarter, so January is
+      mixed with February and March; and it lags a quarter or two behind. It also
+      counts individually sold tickets, while the fares above are one seat's share
+      of a whole-party booking &mdash; a different product, priced out of
+      different inventory. Read this as the shape of the market, not as a price
+      anyone was offered.</p>`;
+  container.appendChild(card);
+}
+
 /* Secondary-source coverage, from data/source_probe.json.
 
    Deliberately not a chart and deliberately not in prices.csv: the probe prices
@@ -502,26 +663,26 @@ function renderCoverage(container, probe) {
   if (!probe || !Array.isArray(probe.cells) || !probe.cells.length) return;
 
   const tone = VERDICT_TONE[probe.verdict] || "muted";
-  const rows = probe.cells
+  // Only the rows reproducing the weekly query are shown. The alternative query
+  // shapes were a differential diagnosis -- "our bug" against "the cache" -- and
+  // that closed on 2026-09-08. They stay in source_probe.json as the evidence
+  // for the verdict; re-reading them every week is not what the panel is for.
+  const live = probe.cells.filter((c) => c.is_production);
+  if (!live.length) return;
+  const rows = live
     .map((c) => {
       const result = c.error
         ? `<span class="up">error</span>`
         : c.fares > 0
         ? `${c.fares} fare${c.fares === 1 ? "" : "s"}`
         : `<span class="muted-cell">none</span>`;
-      // The row reproducing the weekly query is the reference every other row
-      // is read against, so it has to be findable at a glance.
-      return `<tr class="${c.is_production ? "live" : ""}">
+      return `<tr>
         <td>${esc(c.origin)} &rarr; ${esc(c.destination)}
           <span class="tag">${
             c.control ? "control" : c.tracked ? "tracked" : "reference"
           }</span></td>
         <td>${esc(c.departure_at)}</td>
         <td>${esc(c.horizon)}</td>
-        <td>${esc(c.shape || "—")}${
-          c.is_production ? ' <span class="tag">live query</span>' : ""
-        }</td>
-        <td>${esc(c.market || "—")}</td>
         <td${c.error ? ` title="${esc(c.error)}"` : ""}>${result}</td>
       </tr>`;
     })
@@ -537,17 +698,18 @@ function renderCoverage(container, probe) {
     <p class="verdict ${tone}">${esc(probe.detail || probe.verdict)}</p>
     <div class="scroll"><table>
       <thead><tr>
-        <th>Route</th><th>Departure</th><th>Horizon</th><th>Query</th><th>Market</th><th>Cached fares</th>
+        <th>Route</th><th>Departure</th><th>Horizon</th><th>Cached fares</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
-    <p class="legend">The control route is one with known traffic. It is what
-      separates "this API has nothing for these dates" from "this API has nothing
-      for these routes". Only the rows marked <em>tracked</em> decide whether the
-      tracker has coverage; control and reference rows are there to explain why. The query shapes separate both of those from a query of
-      ours that is simply wrong: any shape returning fares where the live query
-      returns none is our bug, not the cache's. No fare here is a price for a
-      tracked trip, and none of it reaches the charts above.</p>`;
+    <p class="legend">Every row is the query the weekly run actually sends. The
+      control route is one with known traffic: it is what separates "this API has
+      nothing for these dates" from "this API has nothing for these routes". Only
+      the rows marked <em>tracked</em> decide whether the tracker has coverage;
+      control and reference rows are there to explain why. Alternative query
+      shapes were tried and ruled out as a cause &mdash; that evidence lives in
+      <code>source_probe.json</code>. No fare here is a price for a tracked trip,
+      and none of it reaches the charts above.</p>`;
   container.appendChild(card);
 }
 
@@ -569,12 +731,18 @@ async function main() {
     try {
       probe = JSON.parse(await firstThatLoads("source_probe.json"));
     } catch (_) { /* never probed */ }
+    // Optional as well: refreshed by hand when BTS publishes a new quarter.
+    let baseline = null;
+    try {
+      baseline = JSON.parse(await firstThatLoads("fare_baseline.json"));
+    } catch (_) { /* no baseline built yet */ }
     const rows = parseCsv(csv);
     const routes = JSON.parse(meta);
     if (!rows.length) {
       container.innerHTML = `<div class="empty">No prices recorded yet. The first
         <code>check-prices</code> run will populate this page.</div>`;
       subtitle.textContent = `${routes.length} route(s) configured`;
+      renderBaseline(container, baseline, rows);
       renderCoverage(container, probe);
       return;
     }
@@ -582,6 +750,7 @@ async function main() {
     subtitle.textContent =
       `${routes.length} route(s) · ${rows.length} observations · last checked ${last}`;
     groupRoutes(routes).forEach((group) => renderGroup(container, group, rows, runs));
+    renderBaseline(container, baseline, rows);
     renderCoverage(container, probe);
   } catch (error) {
     container.innerHTML = `<div class="error">${error.message}</div>`;

@@ -183,6 +183,56 @@ appear in the single-adult columns of the pull table.
 Travelpayouts is unmetered as far as this tracker is concerned and is never
 budget-limited.
 
+## What the market charges
+
+Every series on the dashboard is SerpAPI, so on its own the page can say a fare
+is the lowest *we have seen* and nothing more. Five weeks of history and one
+survey cannot answer the question that actually decides a booking: is $2,955 a
+good price for DSM-STT, or does that market normally clear lower?
+
+`src/fare_baseline.py` answers it from the US DOT's Airline Origin and
+Destination Survey (DB1B) - a 10% sample of tickets actually sold, public domain,
+no key, published quarterly. Run it when a new quarter lands:
+
+```bash
+python -m src.fare_baseline --year 2025 --quarter 1
+```
+
+The download is ~90MB and the CSV inside is ~1.8GB, so it is streamed from the
+zip and never extracted; the zip is cached in `.cache/` and gitignored. Only the
+summary reaches the repo, in `data/fare_baseline.json`. It reads the city pairs
+straight from `config/routes.yaml` rather than through `load_config`, because a
+baseline of what a market charges is public data about two airports and has no
+business requiring the private `PARTY` split to build.
+
+**2025 Q1, against the tracked floors:**
+
+| | sampled tickets | p10 | median | p90 | our floor |
+|---|---|---|---|---|---|
+| DSM-STT | 201 | $498 | $791 | $1,462 | $493 - **10th pct** |
+| DSM-SJU | 409 | $335 | $642 | $1,158 | $466 - **33rd pct** |
+
+Round-trip equivalents per person. The STT floor is genuinely a bottom-decile
+fare; the SJU floor is not. That matters, because the $2,700 SJU threshold was
+calibrated to nothing - the README said so - and this is the first evidence that
+it sits looser than STT's.
+
+**It found a carrier the weekly run cannot see.** SerpAPI reports what Google
+chooses to show; DB1B reports who passengers were actually ticketed on. Frontier
+carried roughly 400 passengers on DSM-SJU in Q1 2025, about 9% of the market, and
+has never once appeared in 617 tracker quotes. That is the single finding the
+*Budget carriers and the two-ticket question* section below could not have
+reached from this pipeline alone, and it is the reason the panel flags unseen
+carriers at all. Carriers under 1% of a market are dropped as interline noise, so
+the flag stays worth reading.
+
+**It is a baseline, not a quote.** DB1B lags a quarter or two, has no month field
+(so January is pooled with February and March), prorates round trips into two
+directional records, and counts individually sold tickets rather than six seats
+in one bucket. Like the coverage probe, none of it is written to `prices.csv` and
+none of it reaches the charts: an average of last year's tickets is evidence
+about a market, not a price anyone was offered for this trip.
+
 ## Two destinations
 
 St. Thomas and San Juan are both tracked. The dashboard renders them
@@ -487,6 +537,7 @@ Two smaller files sit alongside it:
 
 - `data/usage.csv` - API searches consumed, for the budget guard.
 - `data/source_probe.json` - secondary-source coverage, written by the probe.
+- `data/fare_baseline.json` - what the market charged, written by the fare baseline.
 - `fare_notes` holds Google's own attribute strings for a fare, such as
   `Carry-on bag not included`. The search response has no fare-brand field -- the
   Booking Options endpoint has one and costs a search per itinerary -- so these
@@ -555,9 +606,25 @@ carries on.
 |---|---|---|---|
 | SerpAPI Google Flights | Open | ~250 searches/month | Scrapes Google Flights, returns JSON. Primary source. |
 | Travelpayouts | Open, affiliate signup | Generous | Cheap-fares endpoints. Works, but holds no cache for DSM-STT or DSM-SJU: see *Budget*. |
-| Amadeus Self-Service | Closed | n/a | Free tier discontinued July 2026. |
-| Kiwi Tequila | Invitation only | n/a | No self-service access for new developers. |
-| FlightAPI.io | Paid | n/a | Fallback if the free sources are outgrown. |
+| US DOT DB1B | Open, public domain | Unlimited | Historical, not bookable. The only genuinely independent source: see *What the market charges*. |
+| Amadeus Self-Service | Closed | n/a | Portal decommissioned 17 July 2026, keys deactivated. No free tier under Enterprise. |
+| Kiwi Tequila | Invitation only | n/a | Closed to self-serve signup May 2024. |
+| Duffel | Application required | Test mode only | Sandbox returns synthetic fares, so it cannot baseline a real route. |
+| FlightAPI.io | Paid | 20 calls, one off | A trial, not a tier: one weekly run is 32. |
+
+**Ruled out, so they stop being re-searched.** AviationStack, Aviation Edge,
+FlightLabs and OpenSky have generous free tiers and no fares at all - they track
+aircraft, not prices. Unofficial RapidAPI mirrors of Skyscanner and Kiwi are
+scrapers carrying the same terms-of-service exposure as scraping Google directly.
+
+**On scraping something other than Google.** The four objections above are
+properties of the category, not of Google: changing the target changes the logo.
+Southwest is a carrier in this data, has sued both Kiwi.com and Skiplagged over
+fare scraping, and won a preliminary injunction on a *breach of contract* theory
+that does not require commercial scale. The practical objection is decisive on
+its own: a DOM scraper breaks silently, which for a price tracker means quietly
+missing the drop it exists to catch. SerpAPI is a scraper whose legal exposure
+and maintenance someone else carries. That is the product.
 
 **Travelpayouts prices one adult.** Its v3 prices endpoints return cached
 single-adult fares and accept no passenger parameters, so this tracker records them

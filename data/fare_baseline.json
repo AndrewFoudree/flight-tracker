@@ -1,0 +1,112 @@
+{
+  "source": "bts_db1b_market",
+  "release": "2025 Q1",
+  "sample_rate_pct": 10,
+  "generated_at": "2026-09-09T15:59:05Z",
+  "pairs": [
+    {
+      "origin": "DSM",
+      "destination": "STT",
+      "markets": 201,
+      "sampled_passengers": 215,
+      "passengers": 2150,
+      "rt_p10": 494,
+      "rt_median": 791,
+      "rt_p90": 1448,
+      "rt_mean": 914,
+      "rt_deciles": [
+        494,
+        574,
+        643,
+        716,
+        791,
+        844,
+        992,
+        1191,
+        1448
+      ],
+      "carriers": [
+        {
+          "code": "AA",
+          "name": "American",
+          "passengers": 1220,
+          "share": 0.5674,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "DL",
+          "name": "Delta",
+          "passengers": 810,
+          "share": 0.3767,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "UA",
+          "name": "United",
+          "passengers": 120,
+          "share": 0.0558,
+          "seen_by_tracker": true
+        }
+      ]
+    },
+    {
+      "origin": "DSM",
+      "destination": "SJU",
+      "markets": 409,
+      "sampled_passengers": 470,
+      "passengers": 4700,
+      "rt_p10": 315,
+      "rt_median": 636,
+      "rt_p90": 1159,
+      "rt_mean": 682,
+      "rt_deciles": [
+        315,
+        366,
+        444,
+        515,
+        636,
+        696,
+        784,
+        966,
+        1159
+      ],
+      "carriers": [
+        {
+          "code": "AA",
+          "name": "American",
+          "passengers": 2950,
+          "share": 0.6277,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "DL",
+          "name": "Delta",
+          "passengers": 750,
+          "share": 0.1596,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "UA",
+          "name": "United",
+          "passengers": 490,
+          "share": 0.1043,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "F9",
+          "name": "Frontier",
+          "passengers": 400,
+          "share": 0.0851,
+          "seen_by_tracker": false
+        },
+        {
+          "code": "WN",
+          "name": "Southwest",
+          "passengers": 100,
+          "share": 0.0213,
+          "seen_by_tracker": true
+        }
+      ]
+    }
+  ]
+}

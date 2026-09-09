@@ -90,6 +90,36 @@
     .na-box { background: color-mix(in srgb, var(--warn) 12%, transparent);
               border-left: 3px solid var(--warn); border-radius: 4px;
               padding: .7rem .9rem; margin: 0; font-size: .87rem; }
+    /* Fare baseline: reference, not a live series, so it reads quieter than a
+       route card but louder than the coverage panel below it. */
+    .baseline h2 small { display: block; margin: .2rem 0 0; font-size: .8rem; }
+    .baseline .pair + .pair { margin-top: 1.5rem; padding-top: 1.3rem;
+                              border-top: 1px solid var(--line); }
+    .pair-head { display: flex; flex-wrap: wrap; gap: .5rem .8rem;
+                 align-items: baseline; margin-bottom: .9rem; }
+    .pair-n { color: var(--muted); font-size: .8rem; }
+    /* Room above and below for the median tick and the floor marker, both of
+       which overhang the bar so they read against the band rather than in it. */
+    .band { position: relative; height: 10px; margin: 1.1rem 0 .4rem;
+            background: color-mix(in srgb, var(--muted) 14%, transparent);
+            border-radius: 999px; }
+    .band-range { position: absolute; top: 0; bottom: 0;
+                  background: color-mix(in srgb, var(--accent) 34%, transparent);
+                  border-radius: 999px; }
+    .band-tick { position: absolute; top: -4px; bottom: -4px; width: 2px;
+                 margin-left: -1px; background: var(--muted); border-radius: 1px; }
+    .band-mark { position: absolute; top: -7px; bottom: -7px; width: 3px;
+                 margin-left: -1.5px; background: var(--good); border-radius: 2px;
+                 box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+    .band-scale { display: flex; justify-content: space-between;
+                  color: var(--muted); font-size: .75rem;
+                  font-variant-numeric: tabular-nums; }
+    .pair-read { margin: .7rem 0 0; font-size: .87rem; }
+    .pair-read strong { font-variant-numeric: tabular-nums; }
+    .pair-carriers { margin: .35rem 0 0; color: var(--muted); font-size: .8rem; }
+    .unseen { margin: 1.3rem 0 0; padding: .6rem .8rem; font-size: .85rem;
+              border-radius: 4px; border-left: 3px solid var(--warn);
+              background: color-mix(in srgb, var(--warn) 12%, transparent); }
     /* Coverage panel: diagnostic, so it reads quieter than a route card. */
     .coverage h2 small { display: block; margin: .2rem 0 0; font-size: .8rem; }
     .coverage .verdict { margin: 0 0 1rem; font-size: .87rem; padding: .6rem .8rem;
