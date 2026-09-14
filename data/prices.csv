@@ -702,3 +702,7 @@ observed_at,route_id,source,origin,destination,depart_date,return_date,seats,tot
 2026-09-14T16:40:41Z,dsm-sju-jan-sat-thu,manual,DSM,SJU,2027-01-30,2027-02-04,1,506.00,USD,Southwest,1,,Checked baggage for a fee
 2026-09-14T16:40:41Z,dsm-sju-jan-sat-thu,manual,DSM,SJU,2027-01-30,2027-02-04,6,3402.00,USD,,,,Google Flights' Cheapest figure; that itinerary was not in the screenshot
 2026-09-14T16:40:41Z,dsm-sju-jan-sat-thu,manual,DSM,SJU,2027-01-30,2027-02-04,6,3563.00,USD,United,1,,Carry-on bag not included
+2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-04-29,2027-05-04,1,512.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
+2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-04-29,2027-05-04,6,3583.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
+2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-05-13,2027-05-18,1,512.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
+2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-05-13,2027-05-18,6,3583.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
