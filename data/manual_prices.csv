@@ -1,6 +1,1 @@
 observed_at,route_id,source,origin,destination,depart_date,return_date,seats,total_price,currency,carrier,stops,booking_url,fare_notes
-2026-09-14T17:25:23Z,dsm-sju-jan-thursdays,manual,DSM,SJU,2027-01-07,2027-01-12,6,3479.00,USD,United,1,,Carry-on bag not included
-2026-09-14T17:25:23Z,dsm-sju-jan-thursdays,manual,DSM,SJU,2027-01-21,2027-01-26,6,3430.00,USD,United,1,,Carry-on bag not included
-2026-09-14T17:25:23Z,dsm-sju-jan-thursdays,manual,DSM,SJU,2027-01-21,2027-01-26,6,3892.00,USD,American,1,,Checked baggage for a fee
-2026-09-14T17:25:23Z,dsm-sju-jan-thursdays,manual,DSM,SJU,2027-01-28,2027-02-02,6,3374.00,USD,Southwest,2,,Checked baggage for a fee
-2026-09-14T17:25:23Z,dsm-sju-jan-thursdays,manual,DSM,SJU,2027-01-28,2027-02-02,6,3402.00,USD,Delta,2,,Checked baggage for a fee
