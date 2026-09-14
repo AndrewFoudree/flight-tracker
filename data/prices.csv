@@ -706,3 +706,8 @@ observed_at,route_id,source,origin,destination,depart_date,return_date,seats,tot
 2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-04-29,2027-05-04,6,3583.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
 2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-05-13,2027-05-18,1,512.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
 2026-09-14T16:56:41Z,dsm-stt-apr-may-thursdays,manual,DSM,STT,2027-05-13,2027-05-18,6,3583.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, CLT)"
+2026-09-14T16:58:55Z,dsm-sju-apr-may-thursdays,manual,DSM,SJU,2027-04-29,2027-05-04,6,3402.00,USD,Delta,1,,Checked baggage for a fee
+2026-09-14T16:58:55Z,dsm-sju-apr-may-thursdays,manual,DSM,SJU,2027-05-13,2027-05-18,6,4214.00,USD,Delta,1,,Checked baggage for a fee
+2026-09-14T16:58:55Z,dsm-sju-apr-may-thursdays,manual,DSM,SJU,2027-05-13,2027-05-18,6,4298.00,USD,United,1,,Carry-on bag not included
+2026-09-14T16:58:55Z,dsm-sju-apr-may-thursdays,manual,DSM,SJU,2027-05-13,2027-05-18,6,4501.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T16:58:55Z,dsm-sju-apr-may-thursdays,manual,DSM,SJU,2027-05-13,2027-05-18,6,3717.00,USD,Southwest,2,,Checked baggage for a fee
