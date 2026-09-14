@@ -185,7 +185,8 @@ budget-limited.
 
 ## What the market charges
 
-Every series on the dashboard is SerpAPI, so on its own the page can say a fare
+Every series on the dashboard is Google Flights - SerpAPI, plus the odd full
+reading looked up by hand (see *Data*) - so on its own the page can say a fare
 is the lowest *we have seen* and nothing more. Five weeks of history and one
 survey cannot answer the question that actually decides a booking: is $2,955 a
 good price for DSM-STT, or does that market normally clear lower?
@@ -577,13 +578,17 @@ Two smaller files sit alongside it:
 - `data/routes.json` - current route metadata, rewritten each run so the dashboard
   can read `prices.csv` without a build step.
 - `data/manual_prices.csv` - fares looked up by hand on Google Flights and
-  transcribed from screenshots, in the same columns as `prices.csv` with
-  `source` set to `manual`. Nothing reads it automatically. It stays out of
-  `prices.csv` because a hand lookup usually covers one departure date, while the
-  `percent_drop` rule and the dashboard's daily-low line both take a day's
-  cheapest fare across *every* date on the route. One Jan 2 lookup at $3,828,
-  sitting six days before a run whose five Saturdays bottom out near $3,165,
-  would be read as a 17% drop and send an alert for a fall that never happened.
+  transcribed from screenshots that do not make a full reading of any route.
+  Same columns as `prices.csv`, `source` set to `manual`, and nothing reads it
+  automatically. The `percent_drop` rule and the dashboard's daily-low line both
+  take a day's cheapest fare across *every* date on the route, so a partial
+  lookup cannot go in `prices.csv`: one Jan 2 lookup at $3,828, six days before a
+  run whose five Saturdays bottom out near $3,165, would be read as a 17% drop
+  and send an alert for a fall that never happened. A hand lookup that covers
+  every itinerary a route searches, exact return dates included, on one UTC day
+  *is* a full reading, and goes into `prices.csv` with `source` still `manual`
+  so it can always be told apart. Filter on `source` to drop them, for the
+  price model or anything else that wants SerpAPI alone.
 
 ### Growth
 

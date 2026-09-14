@@ -616,3 +616,27 @@ observed_at,route_id,source,origin,destination,depart_date,return_date,seats,tot
 2026-09-01T16:40:42Z,dsm-sju-jan-thursdays,serpapi,DSM,SJU,2027-01-28,2027-02-02,6,3630.00,USD,United,1,https://www.google.com/travel/flights?hl=en&gl=us&curr=USD&tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDRFNNcgcIARIDU0pVGh4SCjIwMjctMDItMDJqBwgBEgNTSlVyBwgBEgNEU01AAUABQAJAAkACQAJAA0gBcAGYAQE&tfu=EgIIAQ,Checked baggage for a fee; Bag and fare conditions depend on the return flight
 2026-09-01T16:40:42Z,dsm-sju-jan-thursdays,serpapi,DSM,SJU,2027-01-28,2027-02-02,6,4524.00,USD,United,1,https://www.google.com/travel/flights?hl=en&gl=us&curr=USD&tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDRFNNcgcIARIDU0pVGh4SCjIwMjctMDItMDJqBwgBEgNTSlVyBwgBEgNEU01AAUABQAJAAkACQAJAA0gBcAGYAQE&tfu=EgIIAQ,Checked baggage for a fee; Bag and fare conditions depend on the return flight
 2026-09-01T16:40:42Z,dsm-sju-jan-thursdays,serpapi,DSM,SJU,2027-01-28,2027-02-02,6,5364.00,USD,Delta,1,https://www.google.com/travel/flights?hl=en&gl=us&curr=USD&tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDRFNNcgcIARIDU0pVGh4SCjIwMjctMDItMDJqBwgBEgNTSlVyBwgBEgNEU01AAUABQAJAAkACQAJAA0gBcAGYAQE&tfu=EgIIAQ,Checked baggage for a fee; Bag and fare conditions depend on the return flight
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,3828.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 10 hr 38 min in ORD"
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,5165.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,5472.00,USD,United,1,,Carry-on bag not included
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,5634.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,672.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,834.00,USD,United,1,,Carry-on bag not included
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,1061.00,USD,Delta,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,547.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 10 hr 38 min in ORD"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-09,2027-01-16,1,547.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-09,2027-01-16,1,547.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 11 hr 2 min in ORD"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-09,2027-01-16,6,3828.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-09,2027-01-16,6,3828.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 11 hr 2 min in ORD"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-16,2027-01-23,1,597.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (DFW, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-16,2027-01-23,1,597.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (DFW, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-16,2027-01-23,1,597.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (DFW, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-16,2027-01-23,6,4178.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (DFW, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-23,2027-01-30,1,547.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-23,2027-01-30,1,547.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 11 hr 2 min in ORD"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-23,2027-01-30,6,3828.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-23,2027-01-30,6,3828.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 11 hr 2 min in ORD"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-30,2027-02-06,1,547.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (ORD, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-30,2027-02-06,1,547.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 11 hr 2 min in ORD"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-30,2027-02-06,6,3828.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (DFW, MIA)"
+2026-09-14T16:23:07Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-30,2027-02-06,6,3828.00,USD,American,2,,"Checked baggage for a fee; Overnight layover (DFW, MIA)"
