@@ -545,17 +545,21 @@ so a survey can no longer blind the tracker for the rest of a cycle. Lower
 
 ## Data
 
-`data/prices.csv` is append-only, one row per route per source per run:
+`data/prices.csv` is append-only, one row per itinerary a search returns. A
+SerpAPI search comes back with Google's best and other flights for that
+departure, and every one is kept, not just the cheapest -- that is where
+`carrier`, `stops` and `fare_notes` for the alternatives come from. So a run
+writes roughly nine rows per search, not one row per route:
 
 ```
-observed_at,route_id,source,origin,destination,depart_date,return_date,adults,children,infants,total_price,currency,carrier,stops,booking_url,fare_notes
+observed_at,route_id,source,origin,destination,depart_date,return_date,seats,total_price,currency,carrier,stops,booking_url,fare_notes
 ```
 
 History is never rewritten. A correction goes in as a new row with a later
 timestamp. `observed_at` is always UTC.
 
 Single-adult split-booking probes live in the same file, distinguished by their
-`adults`/`children`/`infants` columns. Analysis and the dashboard filter them out;
+`seats` column. Analysis and the dashboard filter them out;
 a probe at a seventh of the party price would otherwise win every "lowest ever"
 comparison forever.
 
@@ -573,8 +577,33 @@ Two smaller files sit alongside it:
 - `data/routes.json` - current route metadata, rewritten each run so the dashboard
   can read `prices.csv` without a build step.
 
-At a few tens of thousands of rows, switch to SQLite committed as a binary blob.
-At one route a week that is years away.
+### Growth
+
+Measured on 2026-09-13 against the 69 searches in `prices.csv`: a search writes
+6 to 14 rows, 8.9 on average, at about 300 bytes a row. The current grid spends
+32 searches a run, so:
+
+| Per | Searches | Rows | Size |
+| --- | ---: | ---: | ---: |
+| Run (weekly) | 32 | ~285 | ~85 KiB |
+| Month (4-5 runs) | 128-160 | ~1,150-1,400 | ~0.3-0.4 MiB |
+| Year (52 runs) | 1,664 | ~15,000 | ~4.2 MiB |
+
+The ceiling is the plan, not the schedule: 230 spendable searches a cycle (250
+less the reserve of 20) is ~2,050 rows a cycle, or ~24,500 a year, however the
+routes are arranged. The table moves when the grid does, and the grid is
+expected to change once the January 2027 departures pass, so re-measure after
+any change to `config/routes.yaml`.
+
+Two things scale with it. The dashboard downloads the whole of `prices.csv` on
+every page load, so a year of history is a ~4.2 MiB fetch before any chart
+draws. And at a few tens of thousands of rows the plan is to switch to SQLite
+committed as a binary blob: at this rate `prices.csv` reaches 20,000 rows around
+the start of 2028 and 30,000 around autumn 2028, counting from October 2026,
+when the searches come back.
+
+`data/survey.csv` does not grow on a schedule. It is written only by a manual
+survey, and the one on 2026-08-31 wrote 1,570 rows from 192 searches.
 
 ## Dashboard
 
