@@ -19,7 +19,10 @@ defaults:
 
 budget:
   serpapi_monthly_searches: 250
-  reserve: 20            # stop before hitting zero
+  # Normally 20, to stop before hitting zero. Set to 0 on 2026-09-13 to spend the
+  # cycle's last 6 searches on one reading of the first route; put it back to 20
+  # when the plan renews (expected around 2026-09-30).
+  reserve: 0
   # Worst case is a month holding five Sundays: 32 searches a run x 5 = 160,
   # inside the 230 spendable. Sized to fit every month, not the average one.
   # 28 of the 32 go to January, which is the window being bought; April/May is a
