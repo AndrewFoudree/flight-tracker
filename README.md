@@ -605,6 +605,42 @@ when the searches come back.
 `data/survey.csv` does not grow on a schedule. It is written only by a manual
 survey, and the one on 2026-08-31 wrote 1,570 rows from 192 searches.
 
+### Training a price model
+
+The plan, set 2026-09-13, is to train a linear model on the price history in
+**February 2027**, once every January 2027 departure has flown and has a
+complete weekly history behind it.
+
+Not sooner, because the time axis is weeks, not rows. A run yields 22 usable
+points -- the cheapest party fare for each departure date -- but all 22 share a
+day, so they add nothing along the axis the model is about. Weekly searches
+resume around 2026-10-04 and January departures run 2027-01-02 to 2027-01-30,
+which is about 13 runs for the first date and 17 for the last, each starting 90
+to 118 days out. December,
+at about 12 runs, is the earliest a model could be tested on weeks it was not
+trained on, and by then January is already being booked. So this model is for
+the next trip, not this one.
+
+What to train on:
+
+- `prices.csv`, cut to the cheapest row per `observed_at`, `route_id` and
+  `depart_date`, at the party's seat count. Rows with `seats` of 1 are
+  split-booking probes, and route ids no longer in `config/routes.yaml` are
+  leftovers from setting the grid up on 2026-08-31 and 2026-09-01.
+- A `budget_exhausted` row in `runs.csv` means no search happened. It is a gap,
+  not a price.
+- Not `survey.csv` for anything about timing. Every row was observed on one day,
+  so days-before-departure and departure date are the same variable and the
+  model cannot tell a cheap month from a cheap lead time.
+
+The bar is beating "the price will not change" on held-out weeks. Two limits to
+expect: nothing reaches back past ~90 days before the January departures, and
+fares move in steps as buckets sell out, so a straight line is a rough fit.
+
+Checkpoint around 2026-11-01, after about five runs: measure how often these
+fares actually move week to week. That is what says whether February is
+realistic.
+
 ## Dashboard
 
 `dashboard/` is one HTML file and one JS file. The weekly price run deploys it
