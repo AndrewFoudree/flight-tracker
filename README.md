@@ -528,8 +528,10 @@ Trip length was swept the same way, across every January departure:
 
 $2,955 is a fare-bucket floor, not a coincidence: it recurs across six trip
 lengths and roughly 550 quotes. The classic minimum-stay penalty exists but only
-below four nights. Above that, length is free, which is why the Saturday
-routes run 7 nights (Sat -> Sat) at no premium over the Thursday routes' 5. Day
+below four nights. Above that, length was free, which is why the Saturday
+routes first ran 7 nights (Sat -> Sat). It did not last: by 2026-09-14 six seats
+back on the Thursday cost $245 less than back on the Saturday, on every January
+Saturday compared, so those routes now run 5 nights (Sat -> Thu). Day
 of week does not discriminate either once a date sits on the floor - Saturday,
 Thursday and Tuesday January floor dates price identically. What it changes is
 how often a date reaches the floor at all, which is the table above.

@@ -1,6 +1,6 @@
 [
   {
-    "id": "dsm-stt-jan-saturdays",
+    "id": "dsm-stt-jan-sat-thu",
     "origin": "DSM",
     "destination": "STT",
     "threshold_usd": 2800.0,
@@ -11,11 +11,11 @@
     "window": {
       "earliest": "2027-01-02",
       "latest": "2027-01-30",
-      "nights": 7
+      "nights": 5
     }
   },
   {
-    "id": "dsm-sju-jan-saturdays",
+    "id": "dsm-sju-jan-sat-thu",
     "origin": "DSM",
     "destination": "SJU",
     "threshold_usd": 2650.0,
@@ -26,7 +26,7 @@
     "window": {
       "earliest": "2027-01-02",
       "latest": "2027-01-30",
-      "nights": 7
+      "nights": 5
     }
   },
   {
