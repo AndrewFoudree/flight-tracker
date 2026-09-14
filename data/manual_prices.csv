@@ -1,0 +1,9 @@
+observed_at,route_id,source,origin,destination,depart_date,return_date,seats,total_price,currency,carrier,stops,booking_url,fare_notes
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,3828.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 10 hr 38 min in ORD"
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,5165.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,5472.00,USD,United,1,,Carry-on bag not included
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,6,5634.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,672.00,USD,American,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,834.00,USD,United,1,,Carry-on bag not included
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,1061.00,USD,Delta,1,,Checked baggage for a fee
+2026-09-14T15:54:24Z,dsm-stt-jan-saturdays,manual,DSM,STT,2027-01-02,2027-01-09,1,547.00,USD,American,1,,"Checked baggage for a fee; Overnight layover, 10 hr 38 min in ORD"

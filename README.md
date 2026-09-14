@@ -576,6 +576,14 @@ Two smaller files sit alongside it:
   it is an inference and should be checkable.
 - `data/routes.json` - current route metadata, rewritten each run so the dashboard
   can read `prices.csv` without a build step.
+- `data/manual_prices.csv` - fares looked up by hand on Google Flights and
+  transcribed from screenshots, in the same columns as `prices.csv` with
+  `source` set to `manual`. Nothing reads it automatically. It stays out of
+  `prices.csv` because a hand lookup usually covers one departure date, while the
+  `percent_drop` rule and the dashboard's daily-low line both take a day's
+  cheapest fare across *every* date on the route. One Jan 2 lookup at $3,828,
+  sitting six days before a run whose five Saturdays bottom out near $3,165,
+  would be read as a 17% drop and send an alert for a fall that never happened.
 
 ### Growth
 
