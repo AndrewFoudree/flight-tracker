@@ -9,6 +9,11 @@
     "last_alerted_at": "2026-08-31T20:19:44Z",
     "last_alerted_price": 2955.0
   },
+  "dsm-stt-jan-sat-thu": {
+    "cooldown_days": 7,
+    "last_alerted_at": "2026-09-20T16:43:51Z",
+    "last_alerted_price": 3075.0
+  },
   "dsm-stt-jan-thursdays": {
     "cooldown_days": 7,
     "last_alerted_at": "2026-08-31T20:36:43Z",
