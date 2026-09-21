@@ -46,12 +46,14 @@ routes:
   #
   # Out Saturday, back Thursday: 5 nights. Until 2026-09-14 this came back on the
   # Saturday too, 7 nights, because the survey found length free from 4 to 9
-  # nights. That stopped holding. Looked up by hand on 2026-09-14, six seats back
-  # on the Thursday were $245 under the Saturday return on all four Saturdays
-  # compared ($3,583 against $3,828 on Jan 9, 23 and 30). The party is bound by
-  # budget, not by time, so the cheaper flight that also drops two nights of
-  # lodging is the trip being bought. The 7-night history stays in prices.csv
-  # under the old id, dsm-stt-jan-saturdays.
+  # nights. That stopped holding. Looked up by hand on 2026-09-14, seven seats
+  # back on the Thursday were $245 under the Saturday return on all four
+  # Saturdays compared ($3,583 against $3,828 on Jan 9, 23 and 30). Seven, not
+  # six: the infant was entered in a seat, so those totals carry one extra fare
+  # against the party priced here, but the gap between the two returns holds.
+  # The party is bound by budget, not by time, so the cheaper flight that also
+  # drops two nights of lodging is the trip being bought. The 7-night history
+  # stays in prices.csv under the old id, dsm-stt-jan-saturdays.
   # This is the likeliest route to be booked, so it keeps the single-adult probe.
   - id: dsm-stt-jan-sat-thu
     origin: DSM

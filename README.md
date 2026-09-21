@@ -591,6 +591,13 @@ Two smaller files sit alongside it:
   *is* a full reading, and goes into `prices.csv` with `source` still `manual`
   so it can always be told apart. Filter on `source` to drop them, for the
   price model or anything else that wants SerpAPI alone.
+  A hand lookup also has to price the same party as the tracker: in Google
+  Flights' passenger picker the infant goes under *Infants on lap*, not *In
+  seat*. A seated infant buys a seventh seat at about the adult fare, and
+  `seats` has to say so, because the alerts and the chart only compare rows
+  whose `seats` matches the party. The 2026-09-14 readings were taken with the
+  infant in a seat and are stored as `seats` 7; entered as 6 they made the
+  first automated run of `dsm-stt-jan-sat-thu` look like a 14% fall.
 
 ### Growth
 
