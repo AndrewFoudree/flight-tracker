@@ -10,3 +10,5 @@ observed_at,route_id,source,origin,destination,depart_date,return_date,seats,tot
 2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3543.00,USD,American,1,,"Checked baggage for a fee; Long layover (PHL, 13h47m)"
 2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3639.00,USD,United,0,,Carry-on bag not included; nonstop
 2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,4038.00,USD,,1,,Carrier and bag icons hidden behind the browser overlay
+2026-09-24T20:26:27Z,dsm-sju-jan-saturdays,manual,DSM,SJU,2027-01-16,2027-01-23,6,3036.00,USD,United,1,,"Carry-on bag not included; 7 nights, Sat->Sat"
+2026-09-24T20:26:27Z,dsm-sju-jan-saturdays,manual,DSM,SJU,2027-01-16,2027-01-23,6,3036.00,USD,United,2,,"Carry-on bag not included; 7 nights, Sat->Sat; via ORD, EWR"
