@@ -9,8 +9,56 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from statistics import fmean
 
-from .models import Passengers
+from .models import Passengers, Quote
 from .storage import PriceRow
+
+# What Google states about the cabin bag, in its own words. "Carry-on bag not
+# included" is Basic Economy; "Checked baggage for a fee" means the carry-on is
+# included and only the hold bag costs extra.
+_NO_CARRY_ON = "carry-on bag not included"
+_CHECKED_FOR_FEE = "checked baggage for a fee"
+
+
+def bag_status(row: "PriceRow | Quote") -> str:
+    """"included", "excluded" or "unknown" -- never a guess.
+
+    Takes a stored row or a live quote; both carry Google's own `fare_notes`
+    strings, and the question is the same either way.
+
+    The third state is the point of this function. Google saying nothing is not
+    Google saying the fare is unrestricted: 100% of the 2026-08-31 rows and 90%
+    of 2026-09-01's carry no conditions at all, because the parser that reads
+    them landed later. The 2026-09-20 run was the first at full coverage.
+
+    So "unknown" has to stay distinct from "excluded". Collapsing the two would
+    quietly disqualify most of the history, and collapsing it into "included"
+    would do the thing this exists to prevent -- letting a Basic fare clear a
+    bar that a fare with a carry-on set.
+
+    The "Bag and fare conditions depend on the return flight" qualifier that
+    accompanies many of these notes is about the hold bag and the fare rules
+    differing between legs. It does not contradict the carry-on statement, so it
+    is not treated as a downgrade.
+    """
+    notes = (row.fare_notes or "").lower()
+    if _NO_CARRY_ON in notes:
+        return "excluded"
+    if _CHECKED_FOR_FEE in notes:
+        return "included"
+    return "unknown"
+
+
+def with_bag_basis(rows: list[PriceRow], basis: str) -> list[PriceRow]:
+    """Rows eligible under a threshold's basis.
+
+    "any" keeps everything. "bag_inclusive" keeps only fares Google states carry
+    a cabin bag, which deliberately drops "unknown" as well as Basic: a bar
+    calibrated on bag-inclusive fares must not be cleared by a fare nobody can
+    confirm included one.
+    """
+    if basis == "any":
+        return rows
+    return [row for row in rows if bag_status(row) == "included"]
 
 
 def route_rows(

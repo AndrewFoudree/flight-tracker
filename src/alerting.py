@@ -119,7 +119,21 @@ def evaluate(
     """Decide whether this quote deserves a notification.
 
     `history` must already be filtered to whole-party rows for this route.
+
+    A route's threshold_basis is applied here rather than at the call site so it
+    governs every rule at once. Both sides have to move together: filtering the
+    quote but not the history would test a bag-inclusive fare against a Basic
+    rolling minimum, which is the mismatch this setting exists to stop.
     """
+    if route.threshold_basis != "any":
+        status = analysis.bag_status(quote)
+        if status != "included":
+            return None, (
+                f"quote does not meet the {route.threshold_basis} basis "
+                f"(cabin bag {status})"
+            )
+        history = analysis.with_bag_basis(history, route.threshold_basis)
+
     reasons = triggered_reasons(route, quote.total_price, history, now)
     if not reasons:
         return None, "no trigger condition met"

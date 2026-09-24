@@ -94,6 +94,7 @@ def price_row(
     seats: int = 6,
     source: str = "serpapi",
     now: datetime = NOW,
+    fare_notes: str | None = None,
 ) -> PriceRow:
     """A synthetic observation `days_ago` before `now`."""
     return PriceRow(
@@ -110,6 +111,7 @@ def price_row(
         carrier="Delta",
         stops=1,
         booking_url=None,
+        fare_notes=fare_notes,
     )
 
 

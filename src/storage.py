@@ -224,12 +224,25 @@ def write_route_metadata(config, path: Path = ROUTES_META_PATH) -> None:
     payload = []
     for route in config.routes:
         passengers = config.passengers_for(route)
+        origin_cost = config.origin_cost_for(route)
         payload.append(
             {
                 "id": route.id,
                 "origin": route.origin,
                 "destination": route.destination,
                 "threshold_usd": route.threshold_usd,
+                "threshold_basis": route.threshold_basis,
+                # null for the home airport. The dashboard shows a band rather
+                # than adding a midpoint, because no midpoint is defensible.
+                "origin_cost": (
+                    {
+                        "low": origin_cost.low,
+                        "high": origin_cost.high,
+                        "note": origin_cost.note,
+                    }
+                    if origin_cost
+                    else None
+                ),
                 "currency": config.currency_for(route),
                 "seats": passengers.seated,
                 "depart": route.depart.isoformat() if route.depart else None,

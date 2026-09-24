@@ -94,6 +94,61 @@ condition is met **and** either the cooldown (7 days) has elapsed or the price h
 fallen a further 5% below the last alerted price. A fare that sits below threshold
 for two weeks produces two notifications, not fourteen.
 
+### Comparing like with like
+
+A threshold means nothing unless it is compared against the product it was
+calibrated from. On 2027-01-16 San Juan showed $2,650 against St. Thomas' $3,375
+and looked $725 cheaper. The $2,650 was Basic Economy with no cabin bag; the
+cheapest San Juan fare carrying one was $3,546, so like for like San Juan was
+**$171 dearer**. The comparison was not close to right, and it was not obviously
+wrong either.
+
+Each route therefore declares `threshold_basis`:
+
+- `bag_inclusive` -- only fares Google states include a cabin bag may trigger the
+  alert, and only those count toward the rolling minimum it is judged against.
+  The six DSM routes use this, because their $2,796 and $2,955 floors were set
+  from fares reading "Checked baggage for a fee".
+- `any` -- every fare counts. The three hub routes use this, because their bars
+  were anchored on Basic fares and demanding a bag would compare them against a
+  product they were never calibrated from.
+
+Bag status has **three** values, not two: `included`, `excluded`, `unknown`.
+Google saying nothing is not Google saying the fare is unrestricted -- 100% of
+the 2026-08-31 rows and 90% of 2026-09-01's carry no conditions at all, because
+the parser that reads them landed later. The 2026-09-20 run was the first at full
+coverage. An `unknown` fare never satisfies `bag_inclusive`.
+
+On a `bag_inclusive` route the cheapest fare and the judged fare are usually
+different fares: the cheapest is typically Basic, and the bar judges the cheapest
+one carrying a bag. The cheapest is still what gets logged and charted.
+
+### Getting to the airport
+
+Routes from ORD and MSP are not comparable to the DSM ones as printed, so
+`origins` gives each non-home airport a **range**, not a number:
+
+```yaml
+origins:
+  ORD: {low: 169, high: 611}
+```
+
+`low` is out-of-pocket -- fuel, a cheap off-airport lot, tolls. `high` adds
+vehicle wear at the IRS mileage rate and the on-airport economy lot. That is a
+3.6x spread, and no honest midpoint exists.
+
+The width is the point. A hub beats Des Moines only if it beats it at `high` and
+loses only if it loses at `low`; anything between is a conclusion resting on a
+number nobody can pin down, and should be reported undecided rather than settled
+by picking a middle. Checked against the 2026-09-24 readings, every comparison
+survived the full width -- ORD->SJU won by $566 even at `high`, ORD->STT lost by
+$408 even at `low`. The fuzziness changed no answers.
+
+Deliberately unused by alerting. Thresholds are calibrated on raw fares and mean
+"cheap for this origin". Folding a drive estimate into them would re-base every
+bar against a figure the config admits it cannot fix. Cross-origin comparison is
+a reporting job, and the dashboard shows the band.
+
 `src/notify/email.py` is an optional SMTP path, off unless `SMTP_HOST` is set. Keep
 it for the day alerts need to reach somewhere other than this GitHub account.
 

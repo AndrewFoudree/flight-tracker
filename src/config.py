@@ -143,6 +143,37 @@ class Defaults(_Strict):
     infant_fare_pct: float = Field(default=0.0, ge=0, le=100)
 
 
+class OriginCost(_Strict):
+    """What reaching a non-home origin costs the party, as a range.
+
+    A point estimate here would be false precision: driving to ORD is $169 if
+    you count fuel, a cheap off-airport lot and tolls, and $611 if you count
+    vehicle wear at the IRS rate and the economy lot. That is a 3.6x spread and
+    no honest single number exists.
+
+    The range is not an attempt to be accurate. It is there so a comparison can
+    be checked at BOTH ends: a hub only beats the home airport if it beats it at
+    `high`, and only loses if it loses at `low`. Anything in between is a
+    conclusion that rests on an unknowable number, and should be reported as
+    undecided rather than resolved by picking a midpoint.
+
+    Deliberately absent from alerting. Thresholds are calibrated on raw fares
+    and mean "cheap for this origin"; folding a drive estimate into them would
+    silently re-base every bar against a number this class admits it cannot pin
+    down. Cross-origin comparison is a reporting job, not an alerting one.
+    """
+
+    low: float = Field(ge=0)
+    high: float = Field(ge=0)
+    note: str | None = None
+
+    @model_validator(mode="after")
+    def _check_order(self) -> "OriginCost":
+        if self.high < self.low:
+            raise ValueError("origin cost high is below low")
+        return self
+
+
 class DepartWindow(_Strict):
     earliest: date
     latest: date
@@ -192,6 +223,13 @@ class Route(_Strict):
     threshold_usd: float = Field(gt=0)
     alert_on: list[AlertRule] = Field(min_length=1)
     compare_split_booking: bool = False
+    # Which fares threshold_usd was calibrated against, so the bar is never
+    # compared to a cheaper product than the one that set it. "bag_inclusive"
+    # considers only fares Google states include a carry-on; "any" considers
+    # every fare, Basic included. A fare whose bag status is UNKNOWN never
+    # satisfies bag_inclusive -- most rows before 2026-09-20 carry no
+    # conditions at all, and assuming they had bags would defeat the point.
+    threshold_basis: Literal["bag_inclusive", "any"] = "any"
     # Per-route overrides of the defaults block.
     passengers: PassengerConfig | None = None
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
@@ -246,6 +284,16 @@ class Config(_Strict):
     defaults: Defaults
     budget: Budget
     routes: list[Route] = Field(min_length=1)
+    # Keyed by IATA. An origin absent from here costs nothing to reach, which is
+    # the right default for the home airport and the only one that cannot
+    # mislead: a missing entry shows no adjustment rather than a guessed one.
+    #
+    # An entry naming an airport no route departs from is allowed, and must be:
+    # survey.py and hub_survey.py both derive a Config by swapping in their own
+    # single route, and rejecting the now-unreferenced origins would break every
+    # one-off sweep. An unused entry is inert -- it shows no band on a route that
+    # does not exist -- so the key pattern is the only guard worth having.
+    origins: dict[IATA, OriginCost] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _check_routes(self) -> "Config":
@@ -254,6 +302,10 @@ class Config(_Strict):
         if duplicates:
             raise ValueError(f"duplicate route ids: {duplicates}")
         return self
+
+    def origin_cost_for(self, route: Route) -> OriginCost | None:
+        """What reaching this route's origin costs, or None when it is free."""
+        return self.origins.get(route.origin)
 
     # Resolution helpers: per-route value, falling back to defaults.
 

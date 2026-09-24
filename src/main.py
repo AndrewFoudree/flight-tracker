@@ -141,6 +141,23 @@ def best_group_quote(quotes: list[Quote], route_id: str, passengers: Passengers)
     return min(candidates, key=lambda q: q.total_price, default=None)
 
 
+def best_quote_for_basis(
+    quotes: list[Quote], route: Route, passengers: Passengers
+) -> Quote | None:
+    """Cheapest whole-party quote this route's threshold is allowed to judge.
+
+    Distinct from best_group_quote on purpose. The cheapest fare on a route is
+    what gets logged and charted, but on a bag_inclusive route it is frequently
+    a Basic fare that the bar may not consider. Handing that one to the alerting
+    code would make the route silent for the wrong reason: the answer is not
+    "no alert", it is "not this fare -- try the cheapest one carrying a bag".
+    """
+    candidates = [q for q in quotes if q.route_id == route.id and q.is_group(passengers)]
+    if route.threshold_basis != "any":
+        candidates = [q for q in candidates if analysis.bag_status(q) == "included"]
+    return min(candidates, key=lambda q: q.total_price, default=None)
+
+
 def report_split_booking(
     quotes: list[Quote], route: Route, passengers: Passengers, infant_fare_pct: float = 0.0
 ) -> None:
@@ -256,7 +273,22 @@ def run(args: argparse.Namespace) -> int:
             f"{moving['ma_30']:.0f}" if moving["ma_30"] else "n/a",
         )
 
-        alert, why = alerting.evaluate(route, quote, route_history, state, now)
+        # The charted fare is the cheapest one; the judged fare is the cheapest
+        # one the route's basis admits. On a bag_inclusive route those differ
+        # whenever a Basic fare undercuts the main cabin, which is most weeks.
+        alert_quote = best_quote_for_basis(quotes, route, passengers)
+        if alert_quote is None:
+            log.info(
+                "%s: no alert (no whole-party fare met the %s basis)",
+                route.id, route.threshold_basis,
+            )
+            continue
+        if alert_quote is not quote:
+            log.info(
+                "%s: cheapest is %.0f but the %s basis judges %.0f",
+                route.id, quote.total_price, route.threshold_basis, alert_quote.total_price,
+            )
+        alert, why = alerting.evaluate(route, alert_quote, route_history, state, now)
         if alert is None:
             log.info("%s: no alert (%s)", route.id, why)
             continue

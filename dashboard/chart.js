@@ -317,6 +317,35 @@ function fmtDay(iso) {
   });
 }
 
+/* Reaching a non-home origin, shown as the range it actually is.
+
+   Driving to ORD is $169 counting fuel, a cheap lot and tolls, or $611 counting
+   vehicle wear at the IRS rate and the economy lot. Rendering a midpoint would
+   invent a precision nobody has, so both ends are shown and the fare is stated
+   as a band. A comparison against Des Moines only holds if it holds at the top
+   of that band. */
+function originCostLine(route, currency, latest) {
+  const cost = route.origin_cost;
+  if (!cost) return "";
+  const lo = latest + cost.low;
+  const hi = latest + cost.high;
+  return `<p class="legend">Getting to ${route.origin} costs the party
+    ${money(cost.low, currency)}&ndash;${money(cost.high, currency)} on top${
+      cost.note ? ` (${cost.note})` : ""
+    }, so the comparable all-in figure is
+    <strong>${money(lo, currency)}&ndash;${money(hi, currency)}</strong>.
+    Judge this against Des Moines at the <em>high</em> end.</p>`;
+}
+
+/* Which product the bar was calibrated from. A route asking bag_inclusive will
+   not fire on a Basic fare, and saying so on the card stops the threshold being
+   read as a plain number when it is a number plus a condition. */
+function basisLine(route) {
+  if (route.threshold_basis !== "bag_inclusive") return "";
+  return `<p class="legend">This threshold was set from fares that include a
+    cabin bag, so a Basic fare cannot trigger it however cheap it is.</p>`;
+}
+
 /* One card per origin-destination-month, not per route. Saturday and Thursday
    are two ways of buying the same trip, and reading them off two charts on two
    axes is how you miss that one is $250 cheaper. They stay separate series
@@ -373,6 +402,7 @@ function renderGroup(container, routes, rows, runs) {
   if (!withData.length) {
     card.innerHTML = `<header><h2>${lead.origin} &rarr; ${lead.destination}
       <small>${groupWindow(routes)} &middot; ${party}</small></h2></header>
+      ${basisLine(lead)}
       <p class="note">No whole-party observations recorded yet.</p>`;
     container.appendChild(card);
     for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
@@ -409,6 +439,8 @@ function renderGroup(container, routes, rows, runs) {
       ? `<p class="hit">Under the threshold &mdash; ${money(lead.threshold_usd - latest, lead.currency)}
          below the ${money(lead.threshold_usd, lead.currency)} bar.</p>`
       : ""}
+    ${originCostLine(lead, lead.currency, latest)}
+    ${basisLine(lead)}
     <div class="chart"><canvas></canvas></div>
     <p class="note">${labels.length} day(s) of history &middot; tracking since ${labels[0]}${
       naCount ? ` &middot; <span class="na">${naCount} route-day(s) with no data</span>` : ""

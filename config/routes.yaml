@@ -35,6 +35,37 @@ budget:
   # a time without cutting something. If the hub comparison closes either way,
   # ord-stt-jan-sat-thu is the first to drop and returns 3 a run.
 
+# What reaching a non-home origin costs the whole party, round trip, as a RANGE.
+# `low` is out-of-pocket only -- fuel, a cheap off-airport lot, tolls. `high`
+# adds vehicle wear at the IRS mileage rate and the on-airport economy lot.
+#
+# The spread is 3.6x and that is the honest width. This is not here to be
+# accurate; it is here so a comparison can be checked at both ends. A hub beats
+# Des Moines only if it beats it at `high`, and loses only if it loses at `low`.
+# Anything between is a conclusion resting on a number nobody can pin down, and
+# should be reported undecided rather than settled by picking a midpoint.
+#
+# Checked 2026-09-24 against the readings of that day, every comparison survived
+# the full width: ORD->SJU won by $566 even at `high`, ORD->STT lost by $408
+# even at `low`. The number being fuzzy did not change a single answer.
+#
+# Deliberately NOT used by alerting. Thresholds are calibrated on raw fares and
+# mean "cheap for this origin"; folding a drive estimate into them would re-base
+# every bar against a figure this block admits it cannot fix. Cross-origin
+# comparison is a reporting job.
+#
+# DSM is absent on purpose: the home airport is free, and a missing entry shows
+# no adjustment rather than a guessed one.
+origins:
+  ORD:
+    low: 169                 # 666 mi round trip: ~$90 fuel, ~$70 off-site lot, ~$10 tolls
+    high: 611                # IRS 67c/mi ($446) + economy lot 6 days ($150) + tolls
+    note: "333 miles each way; a January drive with no missed-connection cover"
+  MSP:
+    low: 124                 # 488 mi round trip: ~$65 fuel, ~$60 lot
+    high: 423                # IRS 67c/mi ($327) + MSP economy 6 days ($96)
+    note: "244 miles each way, the shorter drive of the two"
+
 routes:
   # Order is load-bearing. When a cycle runs short the guard funds routes in the
   # order they appear and records NA for the rest, so the order runs from what is
@@ -75,6 +106,10 @@ routes:
       - percent_drop: 5
     # 5 dates x 2 = 10 a run.
     compare_split_booking: true
+    # The $2,796 and $2,955 floors these bars came from were fares stating
+    # "Checked baggage for a fee", i.e. a cabin bag included. A Basic fare
+    # must not clear them.
+    threshold_basis: bag_inclusive
 
   # San Juan, the same window and shape as the St. Thomas route above so the two
   # destinations are read side by side. No survey has ever run on SJU, so nothing
@@ -117,6 +152,10 @@ routes:
       - percent_drop: 5
     # 5 dates x 2 = 10 a run.
     compare_split_booking: true
+    # The $2,796 and $2,955 floors these bars came from were fares stating
+    # "Checked baggage for a fee", i.e. a cabin bag included. A Basic fare
+    # must not clear them.
+    threshold_basis: bag_inclusive
 
   # January was the cheapest month of the year: median $2,970 against $3,058 to
   # $3,201 elsewhere, and the most days sitting on the $2,955 floor. Thu -> Tue
@@ -139,6 +178,9 @@ routes:
     # 4 dates x 1 = 4 a run: every January Thursday, party fare only. The
     # single-adult probe lives on the Saturday route, which out-floors this one.
     compare_split_booking: false
+    # Same basis as the Saturday routes: this bar descends from a
+    # bag-inclusive floor, so only a fare with a cabin bag may clear it.
+    threshold_basis: bag_inclusive
 
   # San Juan, January midweek. Party fare only, as above.
   - id: dsm-sju-jan-thursdays
@@ -160,6 +202,9 @@ routes:
     # 4 dates x 1 = 4 a run: every January Thursday, party fare only. The
     # single-adult probe lives on the Saturday route, which out-floors this one.
     compare_split_booking: false
+    # Same basis as the Saturday routes: this bar descends from a
+    # bag-inclusive floor, so only a fare with a cabin bag may clear it.
+    threshold_basis: bag_inclusive
 
   # A second look at the shoulder season. The year survey put April's median at
   # $2,985, level with January, and late April sat on the $2,955 floor on four of
@@ -182,6 +227,9 @@ routes:
     # price can be judged as genuinely low rather than only low for January.
     # Full resolution comes back when this window becomes primary in December.
     compare_split_booking: false
+    # Same basis as the Saturday routes: this bar descends from a
+    # bag-inclusive floor, so only a fare with a cabin bag may clear it.
+    threshold_basis: bag_inclusive
 
   # San Juan, shoulder midweek. The thinnest cell in the grid: new destination,
   # secondary window, weakest weekday. First to lose its searches to a short
@@ -206,6 +254,9 @@ routes:
     # price can be judged as genuinely low rather than only low for January.
     # Full resolution comes back when this window becomes primary in December.
     compare_split_booking: false
+    # Same basis as the Saturday routes: this bar descends from a
+    # bag-inclusive floor, so only a fare with a cabin bag may clear it.
+    threshold_basis: bag_inclusive
 
   # ---------------------------------------------------------------------------
   # Drive-to-a-hub origins, added 2026-09-24.
@@ -269,6 +320,11 @@ routes:
     # 3 dates x 1 = 3 a run. The split-booking probe stays on the DSM Saturday
     # route until this one is more than one observation old.
     compare_split_booking: false
+    # threshold_basis stays "any": this bar was anchored on a fare with NO
+    # cabin bag, so demanding one would compare it against a product it was
+    # never calibrated from. Revisit together with the threshold once there
+    # are three readings -- ideally re-anchoring both on a bag-inclusive fare.
+    threshold_basis: any
 
   # Minneapolis is 244 miles against Chicago's 333 and its best January fare was
   # a Delta nonstop with a carry-on included, where the cheaper ORD fares are
@@ -289,6 +345,11 @@ routes:
       - percent_drop: 5
     # 3 dates x 1 = 3 a run.
     compare_split_booking: false
+    # threshold_basis stays "any": this bar was anchored on a fare with NO
+    # cabin bag, so demanding one would compare it against a product it was
+    # never calibrated from. Revisit together with the threshold once there
+    # are three readings -- ideally re-anchoring both on a bag-inclusive fare.
+    threshold_basis: any
 
   # The control. If this stays dearer than DSM->STT it answers the question and
   # can be dropped, which is why it is last. Jan 9, 23 and 30 -- the window
@@ -310,3 +371,8 @@ routes:
       - percent_drop: 5
     # 2 dates x 1 = 2 a run.
     compare_split_booking: false
+    # threshold_basis stays "any": this bar was anchored on a fare with NO
+    # cabin bag, so demanding one would compare it against a product it was
+    # never calibrated from. Revisit together with the threshold once there
+    # are three readings -- ideally re-anchoring both on a bag-inclusive fare.
+    threshold_basis: any
