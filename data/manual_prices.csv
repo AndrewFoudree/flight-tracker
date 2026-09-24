@@ -1,1 +1,12 @@
 observed_at,route_id,source,origin,destination,depart_date,return_date,seats,total_price,currency,carrier,stops,booking_url,fare_notes
+2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1473.00,USD,United,1,,"Carry-on bag not included; via EWR, arrives 00:36 next day"
+2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1639.00,USD,Frontier,0,,"Carry-on bag not included; nonstop, departs 00:17"
+2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1926.00,USD,United,0,,Carry-on bag not included; nonstop
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2131.00,USD,,,,Google Flights' Cheapest figure; that itinerary was not in the screenshot
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2898.00,USD,Delta,0,,Checked baggage for a fee; nonstop
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2925.00,USD,Delta,1,,Checked baggage for a fee
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,3360.00,USD,Delta,0,,Checked baggage for a fee; nonstop
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3314.00,USD,,,,Google Flights' Cheapest figure; that itinerary was not in the screenshot
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3543.00,USD,American,1,,"Checked baggage for a fee; Long layover (PHL, 13h47m)"
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3639.00,USD,United,0,,Carry-on bag not included; nonstop
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,4038.00,USD,,1,,Carrier and bag icons hidden behind the browser overlay

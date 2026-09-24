@@ -88,5 +88,50 @@
       "latest": "2027-05-13",
       "nights": 5
     }
+  },
+  {
+    "id": "ord-sju-jan-sat-thu",
+    "origin": "ORD",
+    "destination": "SJU",
+    "threshold_usd": 1395.0,
+    "currency": "USD",
+    "seats": 6,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-02",
+      "latest": "2027-01-30",
+      "nights": 5
+    }
+  },
+  {
+    "id": "msp-sju-jan-sat-thu",
+    "origin": "MSP",
+    "destination": "SJU",
+    "threshold_usd": 2020.0,
+    "currency": "USD",
+    "seats": 6,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-02",
+      "latest": "2027-01-30",
+      "nights": 5
+    }
+  },
+  {
+    "id": "ord-stt-jan-sat-thu",
+    "origin": "ORD",
+    "destination": "STT",
+    "threshold_usd": 3140.0,
+    "currency": "USD",
+    "seats": 6,
+    "depart": null,
+    "return": null,
+    "window": {
+      "earliest": "2027-01-09",
+      "latest": "2027-01-30",
+      "nights": 5
+    }
   }
 ]

@@ -23,12 +23,17 @@ budget:
   # cycle's last 6 searches on one reading of the first route; put it back to 20
   # when the plan renews (expected around 2026-09-30).
   reserve: 0
-  # Worst case is a month holding five Sundays: 32 searches a run x 5 = 160,
+  # Worst case is a month holding five Sundays: 41 searches a run x 5 = 205,
   # inside the 230 spendable. Sized to fit every month, not the average one.
-  # 28 of the 32 go to January, which is the window being bought; April/May is a
-  # 4-search baseline until it becomes primary in December. The 70 spare is
-  # deliberate headroom for the backlog -- one-way legs, a day either side of
-  # each target, further origins -- which is added one item at a time.
+  # 28 of the 41 go to DSM January, which is the window being bought; April/May
+  # is a 4-search baseline until it becomes primary in December; the 8 drive-to-
+  # a-hub searches added 2026-09-24 are a comparison, not a search.
+  #
+  # That spare was 70 before the hub routes and is now 25 in a five-Sunday month
+  # (66 in a four-Sunday one), so the backlog -- one-way legs, a day either side
+  # of each target, further origins -- no longer has room to be added an item at
+  # a time without cutting something. If the hub comparison closes either way,
+  # ord-stt-jan-sat-thu is the first to drop and returns 3 a run.
 
 routes:
   # Order is load-bearing. When a cycle runs short the guard funds routes in the
@@ -200,4 +205,108 @@ routes:
     # 2 dates x 1 = 2 a run. A baseline, not a search: it exists so a January
     # price can be judged as genuinely low rather than only low for January.
     # Full resolution comes back when this window becomes primary in December.
+    compare_split_booking: false
+
+  # ---------------------------------------------------------------------------
+  # Drive-to-a-hub origins, added 2026-09-24.
+  #
+  # Every cheap DSM->STT itinerary connects at ORD, and on 2026-09-23 all 11 of
+  # the cheapest ones carried an overnight layover, so the party already pays to
+  # sit in Chicago. The question is whether starting there beats flying there.
+  # Hand readings on 2026-09-23/24 say it depends entirely on the destination:
+  #
+  #   ORD->SJU  Jan 16-21   $1,473  vs DSM $2,650   -- $1,177 cheaper
+  #   MSP->SJU  Jan 16-21   $2,131  vs DSM $2,650   --   $519 cheaper
+  #   ORD->STT  Jan 23-28   $3,314  vs DSM $3,075   --   $239 DEARER
+  #
+  # San Juan from a hub is a different market; St. Thomas is not, because
+  # American holds the STT floor from every origin tried so far. ORD->STT is
+  # tracked anyway, at the coarsest resolution of the three, because one date is
+  # not enough to close a question this expensive.
+  #
+  # The ORD reading also surfaced Frontier nonstop ORD-SJU at $1,639. Low-cost
+  # carriers do not interline, so no DSM through-fare can ever show them -- the
+  # blind spot src/hub_survey.py was written about, visible here for the first
+  # time.
+  #
+  # THESE FARES ARE NOT COMPARABLE TO THE DSM ONES AS PRINTED. Driving costs the
+  # party roughly $265 to ORD (333 miles each way, ~$100 fuel, ~$150 parking for
+  # six days, ~$15 tolls) and roughly $170 to MSP (244 miles, cheaper parking, no
+  # tolls). Subtract that before calling a hub fare a saving. It also buys a
+  # January drive across Iowa carrying no missed-connection protection of any
+  # kind: if weather closes the interstate the fare is simply lost, where a
+  # cancelled DSM departure is the airline's problem. That risk is real and the
+  # number cannot show it.
+  #
+  # Thresholds are provisional and anchored on ONE observation each, set 5.25%
+  # below it -- the same relative break the DSM routes ask of their own floors.
+  # Recalibrate once each has three readings. Until then an alert here means
+  # "cheaper than the single reading we have", not "cheap". The ORD->SJU floor is
+  # also a Basic fare with no carry-on, so its threshold is measuring a thinner
+  # product than the DSM bars, which were calibrated on bag-inclusive fares.
+  #
+  # Three dates, not five: this is a comparison, not the search. Stepping 14 days
+  # lands on Jan 2, 16 and 30 -- three of the five dates the DSM Saturday routes
+  # price -- so the origins can be read against each other directly. They sit
+  # last on purpose: a short cycle should starve these before it starves the trip
+  # actually being bought. If the San Juan gap holds across all three dates,
+  # ord-sju should be promoted above the DSM routes and DSM demoted to reference.
+  # That is a bigger change than a threshold and wants a decision, not a default.
+  - id: ord-sju-jan-sat-thu
+    origin: ORD
+    destination: SJU
+    depart_window:
+      earliest: "2027-01-02"
+      latest: "2027-01-30"
+    nights: 5
+    window_step_days: 14
+    # 5.25% below the single $1,473 reading of 2027-01-16 on 2026-09-24.
+    threshold_usd: 1395
+    alert_on:
+      - absolute_below: 1395
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 3 dates x 1 = 3 a run. The split-booking probe stays on the DSM Saturday
+    # route until this one is more than one observation old.
+    compare_split_booking: false
+
+  # Minneapolis is 244 miles against Chicago's 333 and its best January fare was
+  # a Delta nonstop with a carry-on included, where the cheaper ORD fares are
+  # Basic. Slower on paper, better on the thing the party actually buys.
+  - id: msp-sju-jan-sat-thu
+    origin: MSP
+    destination: SJU
+    depart_window:
+      earliest: "2027-01-02"
+      latest: "2027-01-30"
+    nights: 5
+    window_step_days: 14
+    # 5.25% below the single $2,131 reading of 2027-01-16 on 2026-09-24.
+    threshold_usd: 2020
+    alert_on:
+      - absolute_below: 2020
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 3 dates x 1 = 3 a run.
+    compare_split_booking: false
+
+  # The control. If this stays dearer than DSM->STT it answers the question and
+  # can be dropped, which is why it is last. Jan 9, 23 and 30 -- the window
+  # always prices its latest edge, so stepping 14 from Jan 9 lands on three
+  # dates, not two. All three are dates the DSM Saturday route also prices.
+  - id: ord-stt-jan-sat-thu
+    origin: ORD
+    destination: STT
+    depart_window:
+      earliest: "2027-01-09"
+      latest: "2027-01-30"
+    nights: 5
+    window_step_days: 14
+    # 5.25% below the single $3,314 reading of 2027-01-23 on 2026-09-24.
+    threshold_usd: 3140
+    alert_on:
+      - absolute_below: 3140
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 2 dates x 1 = 2 a run.
     compare_split_booking: false
