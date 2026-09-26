@@ -386,7 +386,50 @@ function groupWindow(routes) {
   return first === last ? first : `${first} to ${last}`;
 }
 
-function renderGroup(container, routes, rows, runs) {
+/* Hand readings from data/manual_prices.csv, shown only on a card with no
+   automated data. Kept out of the chart and the stats on purpose: they are
+   one-off lookups, sometimes off the route's own date pattern or off Google
+   Flights entirely, so they are examples of the market, not a series. */
+function renderHandReadings(card, routes, manual) {
+  const lead = routes[0];
+  const byId = new Map(routes.map((r) => [r.id, r]));
+  const mine = manual
+    .filter((r) => byId.has(r.route_id) && Number(r.seats) === byId.get(r.route_id).seats)
+    .filter((r) => Number.isFinite(Number(r.total_price)))
+    .sort((a, b) => Number(a.total_price) - Number(b.total_price));
+  if (!mine.length) return;
+  const cheapest = Number(mine[0].total_price);
+  const body = mine.map((r) => {
+    const price = Number(r.total_price);
+    const stops = r.stops === "" ? "&mdash;" : Number(r.stops) === 0 ? "nonstop" : `${r.stops} stop(s)`;
+    return `<tr class="${price === cheapest ? "best" : ""}${price <= lead.threshold_usd ? " beats" : ""}">
+      <td>${fmtDay(r.observed_at.slice(0, 10))}</td>
+      <td>${fmtDay(r.depart_date)}</td>
+      <td>${r.return_date ? fmtDay(r.return_date) : "one way"}</td>
+      <td>${money(price, lead.currency)}</td>
+      <td>${esc(r.carrier) || "&mdash;"}</td>
+      <td>${stops}</td>
+      <td${r.fare_notes ? ` title="${esc(r.fare_notes)}"` : ""}>${r.fare_notes ? "&middot;&middot;&middot;" : "&mdash;"}</td>
+    </tr>`;
+  }).join("");
+  const section = document.createElement("div");
+  section.className = "pull";
+  section.innerHTML = `
+    <h3>Hand readings &middot; examples, not tracked</h3>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>Looked up</th><th>Depart</th><th>Return</th><th>Party fare</th>
+        <th>Carrier</th><th>Stops</th><th>Notes</th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+    <p class="legend">Looked up by hand for ${lead.seats} seats, cheapest first. Not
+      on the chart: these readings come from Google Flights or the airline's own site,
+      and some fall off the route's date pattern. Hover over Notes for the details.</p>`;
+  card.appendChild(section);
+}
+
+function renderGroup(container, routes, rows, runs, manual) {
   const lead = routes[0];
   const card = document.createElement("section");
   card.className = "route";
@@ -406,6 +449,7 @@ function renderGroup(container, routes, rows, runs) {
       <p class="note">No whole-party observations recorded yet.</p>`;
     container.appendChild(card);
     for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
+    renderHandReadings(card, routes, manual);
     return;
   }
 
@@ -768,6 +812,11 @@ async function main() {
     try {
       baseline = JSON.parse(await firstThatLoads("fare_baseline.json"));
     } catch (_) { /* no baseline built yet */ }
+    // Optional: hand readings, shown only on cards the weekly run has not priced.
+    let manual = [];
+    try {
+      manual = parseCsv(await firstThatLoads("manual_prices.csv"));
+    } catch (_) { /* none recorded */ }
     const rows = parseCsv(csv);
     const routes = JSON.parse(meta);
     if (!rows.length) {
@@ -781,7 +830,7 @@ async function main() {
     const last = rows[rows.length - 1].observed_at;
     subtitle.textContent =
       `${routes.length} route(s) · ${rows.length} observations · last checked ${last}`;
-    groupRoutes(routes).forEach((group) => renderGroup(container, group, rows, runs));
+    groupRoutes(routes).forEach((group) => renderGroup(container, group, rows, runs, manual));
     renderBaseline(container, baseline, rows);
     renderCoverage(container, probe);
   } catch (error) {

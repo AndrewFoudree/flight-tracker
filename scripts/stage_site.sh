@@ -28,6 +28,6 @@ cp data/prices.csv data/routes.json _site/data/
 # Optional, and separate so a missing one never masks a missing price file.
 # runs.csv does not exist until the first run records an outcome, and the two
 # hand-run panels not until someone runs them.
-for optional in runs.csv source_probe.json fare_baseline.json; do
+for optional in runs.csv source_probe.json fare_baseline.json manual_prices.csv; do
   cp "data/${optional}" _site/data/ 2>/dev/null || true
 done
