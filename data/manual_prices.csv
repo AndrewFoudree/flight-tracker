@@ -1,15 +1,15 @@
-observed_at,route_id,source,origin,destination,depart_date,return_date,seats,total_price,currency,carrier,stops,booking_url,fare_notes
-2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1473.00,USD,United,1,,"Carry-on bag not included; via EWR, arrives 00:36 next day"
-2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1639.00,USD,Frontier,0,,"Carry-on bag not included; nonstop, departs 00:17"
-2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1926.00,USD,United,0,,Carry-on bag not included; nonstop
-2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2131.00,USD,,,,Google Flights' Cheapest figure; that itinerary was not in the screenshot
-2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2898.00,USD,Delta,0,,Checked baggage for a fee; nonstop
-2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2925.00,USD,Delta,1,,Checked baggage for a fee
-2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,3360.00,USD,Delta,0,,Checked baggage for a fee; nonstop
-2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3314.00,USD,,,,Google Flights' Cheapest figure; that itinerary was not in the screenshot
-2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3543.00,USD,American,1,,"Checked baggage for a fee; Long layover (PHL, 13h47m)"
-2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3639.00,USD,United,0,,Carry-on bag not included; nonstop
-2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,4038.00,USD,,1,,Carrier and bag icons hidden behind the browser overlay
-2026-09-24T20:26:27Z,dsm-sju-jan-saturdays,manual,DSM,SJU,2027-01-16,2027-01-23,6,3036.00,USD,United,1,,"Carry-on bag not included; 7 nights, Sat->Sat"
-2026-09-24T20:26:27Z,dsm-sju-jan-saturdays,manual,DSM,SJU,2027-01-16,2027-01-23,6,3036.00,USD,United,2,,"Carry-on bag not included; 7 nights, Sat->Sat; via ORD, EWR"
-2026-09-24T20:32:28Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-22,6,2706.00,USD,Sun Country,0,,"Sun Country website, NOT Google Flights: this carrier does not appear in Google Flights, so no serpapi run can ever price it; nonstop both ways SY761/SY762; 6 nights Sat->Fri, off the route's Sat->Thu pattern; trip summary EXCLUDES bags and seat selection; seats 6 confirmed by Andrew (3 adults, 3 children, 1 lap infant) and by 2706 = 6 x 451.00 exactly (/7 = 386.57, not clean)"
+observed_at,route_id,source,origin,destination,depart_date,return_date,seats,total_price,currency,carrier,stops,booking_url,fare_notes,depart_time,arrive_time
+2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1473.00,USD,United,1,,"Carry-on bag not included; via EWR, arrives 00:36 next day",15:29,00:36+1
+2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1639.00,USD,Frontier,0,,"Carry-on bag not included; nonstop, departs 00:17",00:17,07:03
+2026-09-24T03:13:29Z,ord-sju-jan-sat-thu,manual,ORD,SJU,2027-01-16,2027-01-21,6,1926.00,USD,United,0,,Carry-on bag not included; nonstop,14:16,21:00
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2131.00,USD,,,,"Google Flights' Cheapest figure; that itinerary was not in the screenshot; probably United 2 stops via ORD+EWR, 06:00-00:36+1 ($356/seat on 2026-09-25 vs 2131/6=355.17)",,
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2898.00,USD,Delta,0,,Checked baggage for a fee; nonstop,07:00,14:15
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,2925.00,USD,Delta,1,,Checked baggage for a fee,08:55,21:00
+2026-09-24T03:13:29Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-21,6,3360.00,USD,Delta,0,,Checked baggage for a fee; nonstop,09:00,16:10
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3314.00,USD,,,,"Google Flights' Cheapest figure; that itinerary was not in the screenshot; probably United 1 stop via IAD (8h18m), 21:41-13:56+1 ($557/seat on 2026-09-25 vs 3314/6=552.33)",,
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3543.00,USD,American,1,,"Checked baggage for a fee; Long layover (PHL, 13h47m)",,
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,3639.00,USD,United,0,,Carry-on bag not included; nonstop,07:40,14:31
+2026-09-24T03:13:29Z,ord-stt-jan-sat-thu,manual,ORD,STT,2027-01-23,2027-01-28,6,4038.00,USD,,1,,Carrier and bag icons hidden behind the browser overlay,,
+2026-09-24T20:26:27Z,dsm-sju-jan-saturdays,manual,DSM,SJU,2027-01-16,2027-01-23,6,3036.00,USD,United,1,,"Carry-on bag not included; 7 nights, Sat->Sat",,
+2026-09-24T20:26:27Z,dsm-sju-jan-saturdays,manual,DSM,SJU,2027-01-16,2027-01-23,6,3036.00,USD,United,2,,"Carry-on bag not included; 7 nights, Sat->Sat; via ORD, EWR",,
+2026-09-24T20:32:28Z,msp-sju-jan-sat-thu,manual,MSP,SJU,2027-01-16,2027-01-22,6,2706.00,USD,Sun Country,0,,"Sun Country website, NOT Google Flights: this carrier does not appear in Google Flights, so no serpapi run can ever price it; nonstop both ways SY761/SY762; 6 nights Sat->Fri, off the route's Sat->Thu pattern; trip summary EXCLUDES bags and seat selection; seats 6 confirmed by Andrew (3 adults, 3 children, 1 lap infant) and by 2706 = 6 x 451.00 exactly (/7 = 386.57, not clean)",,

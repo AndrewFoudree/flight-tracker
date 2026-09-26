@@ -407,6 +407,7 @@ function renderHandReadings(card, routes, manual) {
       <td>${fmtDay(r.depart_date)}</td>
       <td>${r.return_date ? fmtDay(r.return_date) : "one way"}</td>
       <td>${money(price, lead.currency)}</td>
+      <td>${r.depart_time ? `${esc(r.depart_time)}&ndash;${esc(r.arrive_time)}` : "&mdash;"}</td>
       <td>${esc(r.carrier) || "&mdash;"}</td>
       <td>${stops}</td>
       <td${r.fare_notes ? ` title="${esc(r.fare_notes)}"` : ""}>${r.fare_notes ? "&middot;&middot;&middot;" : "&mdash;"}</td>
@@ -419,13 +420,15 @@ function renderHandReadings(card, routes, manual) {
     <div class="scroll"><table>
       <thead><tr>
         <th>Looked up</th><th>Depart</th><th>Return</th><th>Party fare</th>
-        <th>Carrier</th><th>Stops</th><th>Notes</th>
+        <th>Outbound</th><th>Carrier</th><th>Stops</th><th>Notes</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table></div>
     <p class="legend">Looked up by hand for ${lead.seats} seats, cheapest first. Not
       on the chart: these readings come from Google Flights or the airline's own site,
-      and some fall off the route's date pattern. Hover over Notes for the details.</p>`;
+      and some fall off the route's date pattern. Outbound is local departure&ndash;arrival
+      time, matched by fare on Google Flights and filled only where the match was
+      exact. Hover over Notes for the details.</p>`;
   card.appendChild(section);
 }
 
