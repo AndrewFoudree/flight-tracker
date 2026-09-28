@@ -346,12 +346,12 @@ function basisLine(route) {
     cabin bag, so a Basic fare cannot trigger it however cheap it is.</p>`;
 }
 
-/* One card per origin-destination-month, not per route. Saturday and Thursday
-   are two ways of buying the same trip, and reading them off two charts on two
-   axes is how you miss that one is $250 cheaper. They stay separate series
-   rather than one merged line: a Sat->Sat 7-night fare and a Thu->Tue 5-night
-   fare are different products, and averaging them would invent a price nobody
-   was ever quoted. */
+/* One card per origin-destination-month, not per route, but one chart per
+   route inside it. Saturday and Thursday are two ways of buying the same trip,
+   so they share a card, a header and an axis -- reading them off two scales is
+   how you miss that one is $250 cheaper. They are not one chart: a Sat->Thu
+   fare and a Thu->Tue fare are different products, and on a shared plot the
+   second series hid the trend line and the first series' gaps. */
 const SERIES_COLORS = ["#5aa9e6", "#7bc47f"];
 
 function patternLabel(route) {
@@ -488,7 +488,12 @@ function renderGroup(container, routes, rows, runs, manual) {
       : ""}
     ${originCostLine(lead, lead.currency, latest)}
     ${basisLine(lead)}
-    <div class="chart"><canvas></canvas></div>
+    ${tracks.map((t) => `<div class="series">
+      <h3>${patternLabel(t.route)}</h3>
+      ${t.priced.length
+        ? `<div class="chart"><canvas data-route="${esc(t.route.id)}"></canvas></div>`
+        : `<p class="note">No whole-party observations recorded yet.</p>`}
+    </div>`).join("")}
     <p class="note">${labels.length} day(s) of history &middot; tracking since ${labels[0]}${
       naCount ? ` &middot; <span class="na">${naCount} route-day(s) with no data</span>` : ""
     }</p>`;
@@ -499,59 +504,66 @@ function renderGroup(container, routes, rows, runs, manual) {
 
   for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
 
-  const datasets = withData.map((t, i) => ({
-    label: patternLabel(t.route),
-    data: labels.map((day) => {
-      const hit = t.series.find(([d]) => d === day);
-      return hit ? hit[1] : null;
-    }),
-    spanGaps: false,                      // a blind day breaks the line
-    borderColor: SERIES_COLORS[i % SERIES_COLORS.length],
-    backgroundColor: "transparent",
-    fill: false, tension: .25, pointRadius: 3, borderWidth: 2,
-  }));
-  // A trend line only means something against a single series. With two it is
-  // four lines on one chart and reads as noise.
-  if (withData.length === 1) {
-    datasets.push({
+  // One scale for every chart on the card, so the same height means the same
+  // price across patterns. Suggested rather than fixed bounds: Chart.js still
+  // rounds them to tidy ticks, and it rounds identical inputs identically.
+  const values = [...observed.map(([, v]) => v), lead.threshold_usd];
+  const pad = (Math.max(...values) - Math.min(...values)) * 0.05 || 100;
+  const yMin = Math.min(...values) - pad;
+  const yMax = Math.max(...values) + pad;
+
+  tracks.forEach((t, i) => {
+    if (!t.priced.length) return;
+    const canvas = card.querySelector(`canvas[data-route="${CSS.escape(t.route.id)}"]`);
+    const datasets = [{
+      label: "Cheapest party fare",
+      data: labels.map((day) => {
+        const hit = t.series.find(([d]) => d === day);
+        return hit ? hit[1] : null;
+      }),
+      spanGaps: false,                    // a blind day breaks the line
+      borderColor: SERIES_COLORS[i % SERIES_COLORS.length],
+      backgroundColor: "transparent",
+      fill: false, tension: .25, pointRadius: 3, borderWidth: 2,
+    }, {
       label: "7-day average",
-      data: movingAverage(withData[0].series, 7),
+      data: movingAverage(t.series, 7),
       borderColor: "#96a0ad",
       borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, fill: false,
-    });
-  }
-  datasets.push({
-    label: "Threshold",
-    data: labels.map(() => lead.threshold_usd),
-    borderColor: "#e6a34a",
-    borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, fill: false,
-  });
+    }, {
+      label: "Threshold",
+      data: labels.map(() => t.route.threshold_usd),
+      borderColor: "#e6a34a",
+      borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, fill: false,
+    }];
 
-  new Chart(card.querySelector("canvas"), {
-    type: "line",
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: { labels: { color: ink, boxWidth: 12, usePointStyle: true } },
-        tooltip: {
-          callbacks: {
-            label: (ctx) =>
-              ctx.parsed.y === null || ctx.parsed.y === undefined
-                ? `${ctx.dataset.label}: no data`
-                : `${ctx.dataset.label}: ${money(ctx.parsed.y, lead.currency)}`,
+    new Chart(canvas, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { labels: { color: ink, boxWidth: 12, usePointStyle: true } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) =>
+                ctx.parsed.y === null || ctx.parsed.y === undefined
+                  ? `${ctx.dataset.label}: no data`
+                  : `${ctx.dataset.label}: ${money(ctx.parsed.y, lead.currency)}`,
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { color: ink, maxTicksLimit: 10 }, grid: { color: grid } },
+          y: {
+            suggestedMin: yMin, suggestedMax: yMax,
+            ticks: { color: ink, callback: (v) => money(v, lead.currency) },
+            grid: { color: grid },
           },
         },
       },
-      scales: {
-        x: { ticks: { color: ink, maxTicksLimit: 10 }, grid: { color: grid } },
-        y: {
-          ticks: { color: ink, callback: (v) => money(v, lead.currency) },
-          grid: { color: grid },
-        },
-      },
-    },
+    });
   });
 }
 
@@ -593,10 +605,15 @@ function percentileOf(deciles, value) {
 }
 
 /* Cheapest per-seat price ever recorded on a whole-party booking, by
-   destination. Party rows only: DB1B counts individually sold tickets, and the
-   single-adult probe is already a different product from six seats in one
-   bucket. Computed here rather than stored in the JSON because it moves with
+   origin-destination pair. Party rows only: DB1B counts individually sold
+   tickets, and the single-adult probe is already a different product from six
+   seats in one bucket. Keyed by origin as well because the baseline is a city
+   pair: an ORD -> STT fare is a different market, and filed under destination
+   alone it would sit on the DSM -> STT bar as a price nobody quoted from Des
+   Moines. Computed here rather than stored in the JSON because it moves with
    every run, and a percentile baked in on a Tuesday is wrong by Sunday. */
+const pairKey = (origin, destination) => `${origin}|${destination}`;
+
 function partyFloors(rows) {
   const best = {};
   rows.forEach((row) => {
@@ -604,9 +621,8 @@ function partyFloors(rows) {
     const total = Number(row.total_price);
     if (!(seats > 1) || !(total > 0)) return;
     const perSeat = total / seats;
-    if (best[row.destination] === undefined || perSeat < best[row.destination]) {
-      best[row.destination] = perSeat;
-    }
+    const key = pairKey(row.origin, row.destination);
+    if (best[key] === undefined || perSeat < best[key]) best[key] = perSeat;
   });
   return best;
 }
@@ -622,7 +638,7 @@ function renderBaseline(container, baseline, rows) {
     .map((p) => {
       const deciles = p.rt_deciles || [];
       if (deciles.length < 2) return "";
-      const floor = floors[p.destination];
+      const floor = floors[pairKey(p.origin, p.destination)];
       const has = floor !== undefined;
       const top = deciles[deciles.length - 1];
       const rawLo = has ? Math.min(deciles[0], floor) : deciles[0];
