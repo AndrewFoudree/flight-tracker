@@ -19,10 +19,10 @@ defaults:
 
 budget:
   serpapi_monthly_searches: 250
-  # Normally 20, to stop before hitting zero. Set to 0 on 2026-09-13 to spend the
-  # cycle's last 6 searches on one reading of the first route; put it back to 20
-  # when the plan renews (expected around 2026-09-30).
-  reserve: 0
+  # Stop 20 short of zero, so a manual re-run always has headroom. (It sat at 0
+  # from 2026-09-13 to spend the first cycle's last 6 searches; restored
+  # 2026-10-01, the day the plan was seen renewed at 250 of 250.)
+  reserve: 20
   # Worst case is a month holding five Sundays: 41 searches a run x 5 = 205,
   # inside the 230 spendable. Sized to fit every month, not the average one.
   # 28 of the 41 go to DSM January, which is the window being bought; April/May
@@ -369,7 +369,7 @@ routes:
       - absolute_below: 3140
       - lowest_in_days: 30
       - percent_drop: 5
-    # 2 dates x 1 = 2 a run.
+    # 3 dates x 1 = 3 a run.
     compare_split_booking: false
     # threshold_basis stays "any": this bar was anchored on a fare with NO
     # cabin bag, so demanding one would compare it against a product it was
