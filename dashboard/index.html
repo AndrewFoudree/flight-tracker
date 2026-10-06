@@ -20,6 +20,7 @@
       --accent: #5aa9e6;
       --good: #58c98a;
       --warn: #e6a34a;
+      --edge: color-mix(in srgb, var(--good) 45%, var(--line));
     }
     @media (prefers-color-scheme: light) {
       :root {
@@ -36,12 +37,19 @@
     main { max-width: 1080px; margin: 0 auto; }
     h1 { font-size: 1.4rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
     .sub { color: var(--muted); margin: 0 0 2rem; font-size: .9rem; }
-    .route { background: var(--panel); border: 1px solid var(--line);
+    /* Every card is outlined in a soft green and opens on a tinted header band,
+       so each box reads as its own unit. Full-strength green is kept for a card
+       under its bar (.route.beats below), which is what green means here. */
+    .route { background: var(--panel); border: 1.5px solid var(--edge);
              border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
     .route header { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem;
+                    margin: -1.25rem -1.25rem 1rem; padding: 1rem 1.25rem;
+                    border-radius: 11px 11px 0 0; border-bottom: 1px solid var(--edge);
+                    background: color-mix(in srgb, var(--good) 9%, var(--panel));
                     align-items: baseline; margin-bottom: 1rem; }
-    .route h2 { font-size: 1.05rem; margin: 0; }
-    .route h2 small { color: var(--muted); font-weight: 400; margin-left: .5rem; }
+    .route h2 { font-size: 1.3rem; margin: 0; letter-spacing: -.01em; }
+    .route h2 small { color: var(--text); font-size: .95rem; font-weight: 500;
+                      margin-left: .6rem; opacity: .8; }
     .stats { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-left: auto; }
     .stat { text-align: right; }
     .stat .k { display: block; color: var(--muted); font-size: .72rem;
@@ -53,7 +61,7 @@
     .chart { position: relative; height: 300px; }
     /* Every section inside a card opens on the same rule: one per pattern
        (chart and its pull together), and one for hand readings. */
-    .series { margin-top: 1.4rem; border-top: 1px solid var(--line); padding-top: 1.1rem; }
+    .series { margin-top: 1.4rem; border-top: 1px solid var(--edge); padding-top: 1.1rem; }
     .series .pull { margin-top: 1.1rem; border-top: 0; padding-top: 0; }
     .pull h3.after-na { margin-top: 1.1rem; }
     /* The pattern that cleared its bar, inside the card outlined for it. */
@@ -88,7 +96,9 @@
     td.down { color: var(--good); font-weight: 600; }
     td.up { color: var(--warn); font-weight: 600; }
     .legend { color: var(--muted); font-size: .78rem; margin: .7rem 0 0; }
-    .route.beats { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
+    .route.beats { border: 2px solid var(--good); border-left-width: 6px; }
+    .route.beats header { background: color-mix(in srgb, var(--good) 22%, var(--panel));
+                          border-bottom-color: var(--good); }
     .hit { margin: .7rem 0 0; padding: .5rem .7rem; font-size: .85rem; font-weight: 600;
            color: var(--good); border-radius: 4px;
            background: color-mix(in srgb, var(--good) 14%, transparent);
