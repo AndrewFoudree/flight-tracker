@@ -94,3 +94,15 @@ observed_at,source,route_id,searches
 2026-10-04T17:23:14Z,travelpayouts,ord-sju-jan-sat-thu,1
 2026-10-04T17:23:14Z,travelpayouts,msp-sju-jan-sat-thu,1
 2026-10-04T17:23:14Z,travelpayouts,ord-stt-jan-sat-thu,1
+2026-10-06T17:25:10Z,serpapi,dsm-stt-mar-sat-thu,1
+2026-10-06T17:25:10Z,serpapi,dsm-sju-mar-sat-thu,1
+2026-10-06T17:25:10Z,serpapi,dsm-stt-mar-thu-tue,1
+2026-10-06T17:25:10Z,serpapi,dsm-sju-mar-thu-tue,1
+2026-10-06T17:25:10Z,serpapi,dsm-stt-mar-sat-sat,1
+2026-10-06T17:25:10Z,serpapi,dsm-sju-mar-sat-sat,1
+2026-10-06T17:25:10Z,travelpayouts,dsm-stt-mar-sat-thu,1
+2026-10-06T17:25:10Z,travelpayouts,dsm-sju-mar-sat-thu,1
+2026-10-06T17:25:10Z,travelpayouts,dsm-stt-mar-thu-tue,1
+2026-10-06T17:25:10Z,travelpayouts,dsm-sju-mar-thu-tue,1
+2026-10-06T17:25:10Z,travelpayouts,dsm-stt-mar-sat-sat,1
+2026-10-06T17:25:10Z,travelpayouts,dsm-sju-mar-sat-sat,1
