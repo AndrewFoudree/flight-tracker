@@ -91,21 +91,35 @@ routes:
   # the one trip whose dates are fixed, so the full week is the obvious thing to
   # want, and nobody has priced it for March.
   #
-  # Thresholds are January's, not March's own. The 2026-08-31 survey priced
-  # DSM->STT Mar 16->23 on the same $2,955 American floor as January, so STT's
-  # $2,800 carries over on evidence. San Juan was never surveyed for March and
-  # borrows its $2,650 by parity only. Spring break is peak demand, so expect
-  # these bars to sit further under the market than in January -- recalibrate
-  # once each route has three readings. Party fare only: the split-booking probe
-  # would double each route's cost, and the budget above has no room for it.
+  # Thresholds are March's own, anchored 2026-10-06 the way every other bar
+  # here was: 5.25% under the bucket floor, one bar per destination shared by
+  # all three shapes, as January's Saturday and Thursday routes share theirs.
+  #
+  #   STT  floor $3,586  Thu 11->Tue 16, American, 2 stops   ->  bar $3,395
+  #   SJU  floor $3,474  Thu 11->Tue 16, Southwest, 2 stops  ->  bar $3,290
+  #
+  # Both floors state "Checked baggage for a fee", so bag_inclusive holds.
+  # Shared rather than per shape because the party buys the cheapest total
+  # trip: a Sat->Sat fare matters only once it undercuts the cheapest week, and
+  # the lowest_in_days and percent_drop rules still flag movement on each shape.
+  #
+  # January's borrowed $2,800 / $2,650 were replaced the same day: the first
+  # run put every March fare $600 to $2,700 over them, so they could never fire.
+  # The 2026-08-31 survey's $2,955 for STT Mar 16->23 was the week after the
+  # break and does not describe it.
+  #
+  # One reading each, so provisional like the hub bars: SJU's floor is a lone
+  # Southwest fare with the next quote at $4,322, a thin bucket. Re-anchor after
+  # three readings (~2026-10-25). Party fare only: the split-booking probe would
+  # double each route's cost, and the budget above has no room for it.
   - id: dsm-stt-mar-sat-thu
     origin: DSM
     destination: STT
     depart: "2027-03-13"
     return: "2027-03-18"
-    threshold_usd: 2800
+    threshold_usd: 3395
     alert_on:
-      - absolute_below: 2800
+      - absolute_below: 3395
       - lowest_in_days: 30
       - percent_drop: 5
     # 1 a run.
@@ -117,9 +131,9 @@ routes:
     destination: SJU
     depart: "2027-03-13"
     return: "2027-03-18"
-    threshold_usd: 2650
+    threshold_usd: 3290
     alert_on:
-      - absolute_below: 2650
+      - absolute_below: 3290
       - lowest_in_days: 30
       - percent_drop: 5
     # 1 a run.
@@ -131,9 +145,9 @@ routes:
     destination: STT
     depart: "2027-03-11"
     return: "2027-03-16"
-    threshold_usd: 2800
+    threshold_usd: 3395
     alert_on:
-      - absolute_below: 2800
+      - absolute_below: 3395
       - lowest_in_days: 30
       - percent_drop: 5
     # 1 a run.
@@ -145,9 +159,9 @@ routes:
     destination: SJU
     depart: "2027-03-11"
     return: "2027-03-16"
-    threshold_usd: 2650
+    threshold_usd: 3290
     alert_on:
-      - absolute_below: 2650
+      - absolute_below: 3290
       - lowest_in_days: 30
       - percent_drop: 5
     # 1 a run.
@@ -159,9 +173,9 @@ routes:
     destination: STT
     depart: "2027-03-13"
     return: "2027-03-20"
-    threshold_usd: 2800
+    threshold_usd: 3395
     alert_on:
-      - absolute_below: 2800
+      - absolute_below: 3395
       - lowest_in_days: 30
       - percent_drop: 5
     # 1 a run.
@@ -173,9 +187,9 @@ routes:
     destination: SJU
     depart: "2027-03-13"
     return: "2027-03-20"
-    threshold_usd: 2650
+    threshold_usd: 3290
     alert_on:
-      - absolute_below: 2650
+      - absolute_below: 3290
       - lowest_in_days: 30
       - percent_drop: 5
     # 1 a run.
