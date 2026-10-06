@@ -110,6 +110,28 @@ const RESTRICTED = /basic economy|carry-on bag not included|no carry-on/i;
    is worth surfacing rather than collapsing into "no flag". */
 const BAG_FEE = /checked baggage for a fee/i;
 
+/* Whether a fare can clear this route's bar. Mirrors analysis.with_bag_basis:
+   a bag_inclusive bar is only cleared by a fare Google states carries a cabin
+   bag, so Basic and unknown both fall out. Without this the card went green on
+   a Basic fare the alerter had already, correctly, ignored. */
+function countsForBar(route, notes) {
+  if (route.threshold_basis !== "bag_inclusive") return true;
+  const text = (notes || "").toLowerCase();
+  return !text.includes("carry-on bag not included") && BAG_FEE.test(text);
+}
+
+/* The cheapest fare on a pattern's newest priced day that its basis admits, or
+   null. This, not the raw cheapest, is what decides the green. */
+function latestQualifying(rows, route) {
+  const party = partyRows(rows, route);
+  const newest = party.map((r) => r.observed_at.slice(0, 10)).sort().pop();
+  const prices = party
+    .filter((r) => r.observed_at.startsWith(newest) && countsForBar(route, r.fare_notes))
+    .map((r) => Number(r.total_price))
+    .filter(Number.isFinite);
+  return prices.length ? Math.min(...prices) : null;
+}
+
 const money = (value, currency) =>
   new Intl.NumberFormat(undefined, {
     style: "currency", currency, maximumFractionDigits: 0,
@@ -197,25 +219,32 @@ function latestPull(rows, route) {
   return departures.length ? { day, departures } : null;
 }
 
-function renderLatestPull(card, route, rows, runs) {
+/* Appends into the pattern's own section, under its chart, so a pattern's chart
+   and table sit inside one divider. An NA and the fallback table it points to
+   are one block: they describe the same pattern and must not be split. */
+function renderLatestPull(target, route, rows, runs) {
   const mine = runs.filter((r) => r.route_id === route.id);
   const newest = mine.length ? mine[mine.length - 1] : null;
   const pull = latestPull(rows, route);
+  const failed = newest && newest.status !== "ok";
+  if (!failed && !pull) return;
 
-  if (newest && newest.status !== "ok") {
-    const section = document.createElement("div");
-    section.className = "pull";
-    section.innerHTML = `
-      <h3>Most recent pull &middot; ${patternLabel(route)}</h3>
+  const section = document.createElement("div");
+  section.className = "pull";
+  const naBlock = failed
+    ? `<h3>Most recent pull</h3>
       <p class="when">Checked ${fmtDay(newest.observed_at.slice(0, 10))}</p>
       <p class="na-box"><strong>NA &mdash; no data returned.</strong> ${
         newest.note || newest.status
       }.${
         pull ? ` Last successful pull was ${fmtDay(pull.day)}; its figures are below.` : ""
-      }</p>`;
-    card.appendChild(section);
+      }</p>`
+    : "";
+  if (!pull) {
+    section.innerHTML = naBlock;
+    target.appendChild(section);
+    return;
   }
-  if (!pull) return;
 
   const seats = route.seats;
   const cheapest = Math.min(...pull.departures.map((d) => d.party));
@@ -251,7 +280,7 @@ function renderLatestPull(card, route, rows, runs) {
       ? `<a href="${esc(d.booking_url)}" target="_blank" rel="noopener noreferrer">${depart}</a>`
       : depart;
     const classes = [];
-    if (d.party <= route.threshold_usd) classes.push("beats");
+    if (d.party <= route.threshold_usd && countsForBar(route, d.fare_notes)) classes.push("beats");
     if (d.party === cheapest) classes.push("best");
     return `<tr class="${classes.join(" ")}">
       <td>${departCell}</td>
@@ -274,10 +303,8 @@ function renderLatestPull(card, route, rows, runs) {
     </tr>`;
   }).join("");
 
-  const section = document.createElement("div");
-  section.className = "pull";
-  section.innerHTML = `
-    <h3>${newest && newest.status !== "ok" ? "Last successful pull" : "Most recent pull"} &middot; ${patternLabel(route)}</h3>
+  section.innerHTML = `${naBlock}
+    <h3${failed ? ' class="after-na"' : ""}>${failed ? "Last successful pull" : "Most recent pull"}</h3>
     <p class="when">Checked ${fmtDay(pull.day)} &middot; ${pull.departures.length} departure(s) priced${
       anyMove ? "" : " &middot; first pull for these departures, so nothing to compare against yet"
     }</p>
@@ -307,7 +334,7 @@ function renderLatestPull(card, route, rows, runs) {
           " seats, so the group is being priced up a tier. Cheap inventory is draining."
         : "Spreads are near zero, so the cheap fare buckets still hold all " + seats + " seats."
     }</p>`;
-  card.appendChild(section);
+  target.appendChild(section);
 }
 
 function fmtDay(iso) {
@@ -402,7 +429,7 @@ function renderHandReadings(card, routes, manual) {
   const body = mine.map((r) => {
     const price = Number(r.total_price);
     const stops = r.stops === "" ? "&mdash;" : Number(r.stops) === 0 ? "nonstop" : `${r.stops} stop(s)`;
-    return `<tr class="${price === cheapest ? "best" : ""}${price <= lead.threshold_usd ? " beats" : ""}">
+    return `<tr class="${price === cheapest ? "best" : ""}${price <= lead.threshold_usd && countsForBar(lead, r.fare_notes) ? " beats" : ""}">
       <td>${fmtDay(r.observed_at.slice(0, 10))}</td>
       <td>${fmtDay(r.depart_date)}</td>
       <td>${r.return_date ? fmtDay(r.return_date) : "one way"}</td>
@@ -441,17 +468,38 @@ function renderGroup(container, routes, rows, runs, manual) {
   const tracks = routes.map((route) => {
     const priced = dailyMinimum(partyRows(rows, route));
     const naDays = naDaysFor(runs, route.id);
-    return { route, priced, naDays, series: mergeSeries(priced, naDays) };
+    const qualifying = latestQualifying(rows, route);
+    const beats = qualifying !== null && qualifying <= route.threshold_usd;
+    return { route, priced, naDays, series: mergeSeries(priced, naDays), qualifying, beats };
   });
   const withData = tracks.filter((t) => t.priced.length);
+
+  /* One section per pattern -- its chart, then its pull table -- each opened by
+     the same divider. The green follows the same lines: the card is outlined
+     when any pattern clears its bar, and the pattern that did is the section
+     marked inside it, so the outline never vouches for a table that missed. */
+  const sectionFor = (t) => {
+    const div = document.createElement("div");
+    div.className = `series${t.beats ? " beats" : ""}`;
+    div.innerHTML = `<h3>${patternLabel(t.route)}${
+        t.beats ? ' <span class="under-tag">under the bar</span>' : ""
+      }</h3>
+      ${t.priced.length
+        ? `<div class="chart"><canvas data-route="${esc(t.route.id)}"></canvas></div>`
+        : `<p class="note">No whole-party observations recorded yet.</p>`}`;
+    return div;
+  };
 
   if (!withData.length) {
     card.innerHTML = `<header><h2>${lead.origin} &rarr; ${lead.destination}
       <small>${groupWindow(routes)} &middot; ${party}</small></h2></header>
-      ${basisLine(lead)}
-      <p class="note">No whole-party observations recorded yet.</p>`;
+      ${basisLine(lead)}`;
     container.appendChild(card);
-    for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
+    for (const t of tracks) {
+      const section = sectionFor(t);
+      card.appendChild(section);
+      renderLatestPull(section, t.route, rows, runs);
+    }
     renderHandReadings(card, routes, manual);
     return;
   }
@@ -468,8 +516,10 @@ function renderGroup(container, routes, rows, runs, manual) {
   const recent = observed.filter(([day]) => recentDays.has(day));
   const average = recent.reduce((sum, [, v]) => sum + v, 0) / recent.length;
   const naCount = tracks.reduce((n, t) => n + t.naDays.size, 0);
-  const beats = latest <= lead.threshold_usd;
+  const winners = tracks.filter((t) => t.beats);
+  const beats = winners.length > 0;
   if (beats) card.classList.add("beats");
+  const best = beats ? winners.reduce((a, b) => (b.qualifying < a.qualifying ? b : a)) : null;
 
   card.innerHTML = `
     <header>
@@ -483,26 +533,25 @@ function renderGroup(container, routes, rows, runs, manual) {
       </div>
     </header>
     ${beats
-      ? `<p class="hit">Under the threshold &mdash; ${money(lead.threshold_usd - latest, lead.currency)}
-         below the ${money(lead.threshold_usd, lead.currency)} bar.</p>`
+      ? `<p class="hit">Under the threshold${
+          tracks.length > 1 ? ` on ${winners.map((t) => patternLabel(t.route)).join(" and ")}` : ""
+        } &mdash; ${money(best.route.threshold_usd - best.qualifying, lead.currency)}
+         below the ${money(best.route.threshold_usd, lead.currency)} bar.</p>`
       : ""}
     ${originCostLine(lead, lead.currency, latest)}
     ${basisLine(lead)}
-    ${tracks.map((t) => `<div class="series">
-      <h3>${patternLabel(t.route)}</h3>
-      ${t.priced.length
-        ? `<div class="chart"><canvas data-route="${esc(t.route.id)}"></canvas></div>`
-        : `<p class="note">No whole-party observations recorded yet.</p>`}
-    </div>`).join("")}
     <p class="note">${labels.length} day(s) of history &middot; tracking since ${labels[0]}${
       naCount ? ` &middot; <span class="na">${naCount} route-day(s) with no data</span>` : ""
     }</p>`;
+  for (const t of tracks) {
+    const section = sectionFor(t);
+    card.appendChild(section);
+    renderLatestPull(section, t.route, rows, runs);
+  }
   container.appendChild(card);
 
   const ink = getComputedStyle(document.body).getPropertyValue("--text").trim();
   const grid = getComputedStyle(document.body).getPropertyValue("--line").trim();
-
-  for (const t of tracks) renderLatestPull(card, t.route, rows, runs);
 
   // One scale for every chart on the card, so the same height means the same
   // price across patterns. Suggested rather than fixed bounds: Chart.js still
