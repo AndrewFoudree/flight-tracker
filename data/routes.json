@@ -1,5 +1,83 @@
 [
   {
+    "id": "dsm-stt-mar-sat-thu",
+    "origin": "DSM",
+    "destination": "STT",
+    "threshold_usd": 2800.0,
+    "threshold_basis": "bag_inclusive",
+    "origin_cost": null,
+    "currency": "USD",
+    "seats": 6,
+    "depart": "2027-03-13",
+    "return": "2027-03-18",
+    "window": null
+  },
+  {
+    "id": "dsm-sju-mar-sat-thu",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2650.0,
+    "threshold_basis": "bag_inclusive",
+    "origin_cost": null,
+    "currency": "USD",
+    "seats": 6,
+    "depart": "2027-03-13",
+    "return": "2027-03-18",
+    "window": null
+  },
+  {
+    "id": "dsm-stt-mar-thu-tue",
+    "origin": "DSM",
+    "destination": "STT",
+    "threshold_usd": 2800.0,
+    "threshold_basis": "bag_inclusive",
+    "origin_cost": null,
+    "currency": "USD",
+    "seats": 6,
+    "depart": "2027-03-11",
+    "return": "2027-03-16",
+    "window": null
+  },
+  {
+    "id": "dsm-sju-mar-thu-tue",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2650.0,
+    "threshold_basis": "bag_inclusive",
+    "origin_cost": null,
+    "currency": "USD",
+    "seats": 6,
+    "depart": "2027-03-11",
+    "return": "2027-03-16",
+    "window": null
+  },
+  {
+    "id": "dsm-stt-mar-sat-sat",
+    "origin": "DSM",
+    "destination": "STT",
+    "threshold_usd": 2800.0,
+    "threshold_basis": "bag_inclusive",
+    "origin_cost": null,
+    "currency": "USD",
+    "seats": 6,
+    "depart": "2027-03-13",
+    "return": "2027-03-20",
+    "window": null
+  },
+  {
+    "id": "dsm-sju-mar-sat-sat",
+    "origin": "DSM",
+    "destination": "SJU",
+    "threshold_usd": 2650.0,
+    "threshold_basis": "bag_inclusive",
+    "origin_cost": null,
+    "currency": "USD",
+    "seats": 6,
+    "depart": "2027-03-13",
+    "return": "2027-03-20",
+    "window": null
+  },
+  {
     "id": "dsm-stt-jan-sat-thu",
     "origin": "DSM",
     "destination": "STT",
@@ -139,27 +217,6 @@
     "return": null,
     "window": {
       "earliest": "2027-01-02",
-      "latest": "2027-01-30",
-      "nights": 5
-    }
-  },
-  {
-    "id": "ord-stt-jan-sat-thu",
-    "origin": "ORD",
-    "destination": "STT",
-    "threshold_usd": 3140.0,
-    "threshold_basis": "any",
-    "origin_cost": {
-      "low": 169.0,
-      "high": 611.0,
-      "note": "333 miles each way; a January drive with no missed-connection cover"
-    },
-    "currency": "USD",
-    "seats": 6,
-    "depart": null,
-    "return": null,
-    "window": {
-      "earliest": "2027-01-09",
       "latest": "2027-01-30",
       "nights": 5
     }

@@ -23,17 +23,19 @@ budget:
   # from 2026-09-13 to spend the first cycle's last 6 searches; restored
   # 2026-10-01, the day the plan was seen renewed at 250 of 250.)
   reserve: 20
-  # Worst case is a month holding five Sundays: 41 searches a run x 5 = 205,
-  # inside the 230 spendable. Sized to fit every month, not the average one.
-  # 28 of the 41 go to DSM January, which is the window being bought; April/May
-  # is a 4-search baseline until it becomes primary in December; the 8 drive-to-
-  # a-hub searches added 2026-09-24 are a comparison, not a search.
+  # Worst case is a month holding five Sundays: 44 searches a run x 5 = 220,
+  # inside the 230 spendable. Sized to fit every month, not the average one --
+  # and November 2026 and January 2027 both have five.
+  # 6 go to spring break (added 2026-10-06, first in line); 28 to DSM January;
+  # April/May is a 4-search baseline until it becomes primary in December; the
+  # 6 drive-to-a-hub searches are a comparison, not a search.
   #
-  # That spare was 70 before the hub routes and is now 25 in a five-Sunday month
-  # (66 in a four-Sunday one), so the backlog -- one-way legs, a day either side
-  # of each target, further origins -- no longer has room to be added an item at
-  # a time without cutting something. If the hub comparison closes either way,
-  # ord-stt-jan-sat-thu is the first to drop and returns 3 a run.
+  # Spring break was paid for by dropping ord-stt-jan-sat-thu (3 a run), the
+  # route this comment had already named as first to go: it was dearer than
+  # DSM->STT on all six readings, by $267 to $441 before the drive. The spare is
+  # now 10 in a five-Sunday month (54 in a four-Sunday one), so anything further
+  # -- the split-booking probe on March, March from a hub -- means cutting
+  # something else first.
 
 # What reaching a non-home origin costs the whole party, round trip, as a RANGE.
 # `low` is out-of-pocket only -- fuel, a cheap off-airport lot, tolls. `high`
@@ -69,9 +71,119 @@ origins:
 routes:
   # Order is load-bearing. When a cycle runs short the guard funds routes in the
   # order they appear and records NA for the rest, so the order runs from what is
-  # being bought to what is only a reference: January before the shoulder, and the
-  # two destinations paired at every level so a short cycle degrades both alike
-  # instead of blinding one of them.
+  # being bought to what is only a reference: spring break, then January, then the
+  # shoulder, and the two destinations paired at every level so a short cycle
+  # degrades both alike instead of blinding one of them.
+
+  # ---------------------------------------------------------------------------
+  # Spring break, added 2026-10-06 as top priority. The window is fixed by the
+  # school calendar: Thu 2027-03-11 to Sun 2027-03-21. Inside it there are
+  # exactly three trips of the shapes already being tracked, so each is a
+  # fixed-date route rather than a window -- there is nothing to step through.
+  #
+  #   Sat Mar 13 -> Thu Mar 18   5 nights   the January Saturday shape
+  #   Thu Mar 11 -> Tue Mar 16   5 nights   the January Thursday shape
+  #   Sat Mar 13 -> Sat Mar 20   7 nights   the original Saturday shape
+  #
+  # Sat->Sat is last in each pair: in January the Thursday return ran $245
+  # under it on every Saturday compared, and it costs two more nights of lodging
+  # (see the Saturday route below). It is tracked anyway because spring break is
+  # the one trip whose dates are fixed, so the full week is the obvious thing to
+  # want, and nobody has priced it for March.
+  #
+  # Thresholds are January's, not March's own. The 2026-08-31 survey priced
+  # DSM->STT Mar 16->23 on the same $2,955 American floor as January, so STT's
+  # $2,800 carries over on evidence. San Juan was never surveyed for March and
+  # borrows its $2,650 by parity only. Spring break is peak demand, so expect
+  # these bars to sit further under the market than in January -- recalibrate
+  # once each route has three readings. Party fare only: the split-booking probe
+  # would double each route's cost, and the budget above has no room for it.
+  - id: dsm-stt-mar-sat-thu
+    origin: DSM
+    destination: STT
+    depart: "2027-03-13"
+    return: "2027-03-18"
+    threshold_usd: 2800
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 1 a run.
+    compare_split_booking: false
+    threshold_basis: bag_inclusive
+
+  - id: dsm-sju-mar-sat-thu
+    origin: DSM
+    destination: SJU
+    depart: "2027-03-13"
+    return: "2027-03-18"
+    threshold_usd: 2650
+    alert_on:
+      - absolute_below: 2650
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 1 a run.
+    compare_split_booking: false
+    threshold_basis: bag_inclusive
+
+  - id: dsm-stt-mar-thu-tue
+    origin: DSM
+    destination: STT
+    depart: "2027-03-11"
+    return: "2027-03-16"
+    threshold_usd: 2800
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 1 a run.
+    compare_split_booking: false
+    threshold_basis: bag_inclusive
+
+  - id: dsm-sju-mar-thu-tue
+    origin: DSM
+    destination: SJU
+    depart: "2027-03-11"
+    return: "2027-03-16"
+    threshold_usd: 2650
+    alert_on:
+      - absolute_below: 2650
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 1 a run.
+    compare_split_booking: false
+    threshold_basis: bag_inclusive
+
+  - id: dsm-stt-mar-sat-sat
+    origin: DSM
+    destination: STT
+    depart: "2027-03-13"
+    return: "2027-03-20"
+    threshold_usd: 2800
+    alert_on:
+      - absolute_below: 2800
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 1 a run.
+    compare_split_booking: false
+    threshold_basis: bag_inclusive
+
+  - id: dsm-sju-mar-sat-sat
+    origin: DSM
+    destination: SJU
+    depart: "2027-03-13"
+    return: "2027-03-20"
+    threshold_usd: 2650
+    alert_on:
+      - absolute_below: 2650
+      - lowest_in_days: 30
+      - percent_drop: 5
+    # 1 a run.
+    compare_split_booking: false
+    threshold_basis: bag_inclusive
+
+  # ---------------------------------------------------------------------------
+  # January.
 
   # Caribbean leisure capacity runs on a Saturday turnaround, so the cheap bucket
   # should be deepest on a Saturday departure. The survey backs this for January:
@@ -271,9 +383,9 @@ routes:
   #   ORD->STT  Jan 23-28   $3,314  vs DSM $3,075   --   $239 DEARER
   #
   # San Juan from a hub is a different market; St. Thomas is not, because
-  # American holds the STT floor from every origin tried so far. ORD->STT is
-  # tracked anyway, at the coarsest resolution of the three, because one date is
-  # not enough to close a question this expensive.
+  # American holds the STT floor from every origin tried so far. ORD->STT was
+  # tracked as a control until 2026-10-06 and dropped to fund spring break: six
+  # readings, dearer than DSM on every one. Its history stays in prices.csv.
   #
   # The ORD reading also surfaced Frontier nonstop ORD-SJU at $1,639. Low-cost
   # carriers do not interline, so no DSM through-fare can ever show them -- the
@@ -341,32 +453,6 @@ routes:
     threshold_usd: 2020
     alert_on:
       - absolute_below: 2020
-      - lowest_in_days: 30
-      - percent_drop: 5
-    # 3 dates x 1 = 3 a run.
-    compare_split_booking: false
-    # threshold_basis stays "any": this bar was anchored on a fare with NO
-    # cabin bag, so demanding one would compare it against a product it was
-    # never calibrated from. Revisit together with the threshold once there
-    # are three readings -- ideally re-anchoring both on a bag-inclusive fare.
-    threshold_basis: any
-
-  # The control. If this stays dearer than DSM->STT it answers the question and
-  # can be dropped, which is why it is last. Jan 9, 23 and 30 -- the window
-  # always prices its latest edge, so stepping 14 from Jan 9 lands on three
-  # dates, not two. All three are dates the DSM Saturday route also prices.
-  - id: ord-stt-jan-sat-thu
-    origin: ORD
-    destination: STT
-    depart_window:
-      earliest: "2027-01-09"
-      latest: "2027-01-30"
-    nights: 5
-    window_step_days: 14
-    # 5.25% below the single $3,314 reading of 2027-01-23 on 2026-09-24.
-    threshold_usd: 3140
-    alert_on:
-      - absolute_below: 3140
       - lowest_in_days: 30
       - percent_drop: 5
     # 3 dates x 1 = 3 a run.

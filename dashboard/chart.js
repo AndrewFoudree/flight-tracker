@@ -382,7 +382,14 @@ function basisLine(route) {
 const SERIES_COLORS = ["#5aa9e6", "#7bc47f"];
 
 function patternLabel(route) {
-  if (!route.window) return route.depart ? `${route.depart} departure` : route.id;
+  // Fixed dates name both ends: spring break has two trips leaving the same
+  // Saturday, and a departure date alone would label them identically.
+  if (!route.window) {
+    if (!route.depart) return route.id;
+    if (!route["return"]) return `${fmtDay(route.depart)}, one way`;
+    const nights = Math.round((Date.parse(route["return"]) - Date.parse(route.depart)) / 864e5);
+    return `${fmtDay(route.depart)} to ${fmtDay(route["return"])}, ${nights} nights`;
+  }
   const [y, m, d] = route.window.earliest.split("-").map(Number);
   const weekday = new Date(Date.UTC(y, m - 1, d))
     .toLocaleDateString(undefined, { weekday: "long", timeZone: "UTC" });
@@ -409,7 +416,7 @@ function groupRoutes(routes) {
 function groupWindow(routes) {
   const edges = (pick) => routes.map(pick).filter(Boolean).sort();
   const first = edges((r) => (r.window ? r.window.earliest : r.depart))[0];
-  const last = edges((r) => (r.window ? r.window.latest : r.depart)).pop();
+  const last = edges((r) => (r.window ? r.window.latest : r["return"] || r.depart)).pop();
   return first === last ? first : `${first} to ${last}`;
 }
 
