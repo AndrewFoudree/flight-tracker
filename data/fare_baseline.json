@@ -2,7 +2,7 @@
   "source": "bts_db1b_market",
   "release": "2025 Q1",
   "sample_rate_pct": 10,
-  "generated_at": "2026-09-09T17:14:55Z",
+  "generated_at": "2026-10-15T11:00:47Z",
   "pairs": [
     {
       "origin": "DSM",
@@ -97,13 +97,145 @@
           "name": "Frontier",
           "passengers": 400,
           "share": 0.0851,
-          "seen_by_tracker": false
+          "seen_by_tracker": true
         },
         {
           "code": "WN",
           "name": "Southwest",
           "passengers": 100,
           "share": 0.0213,
+          "seen_by_tracker": true
+        }
+      ]
+    },
+    {
+      "origin": "ORD",
+      "destination": "SJU",
+      "markets": 5443,
+      "sampled_passengers": 11184,
+      "passengers": 111840,
+      "rt_p10": 151,
+      "rt_median": 446,
+      "rt_p90": 922,
+      "rt_mean": 505,
+      "rt_deciles": [
+        151,
+        215,
+        293,
+        376,
+        446,
+        514,
+        597,
+        701,
+        922
+      ],
+      "carriers": [
+        {
+          "code": "NK",
+          "name": "Spirit",
+          "passengers": 43560,
+          "share": 0.3895,
+          "seen_by_tracker": false
+        },
+        {
+          "code": "UA",
+          "name": "United",
+          "passengers": 36180,
+          "share": 0.3235,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "AA",
+          "name": "American",
+          "passengers": 25680,
+          "share": 0.2296,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "DL",
+          "name": "Delta",
+          "passengers": 2180,
+          "share": 0.0195,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "F9",
+          "name": "Frontier",
+          "passengers": 1920,
+          "share": 0.0172,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "WN",
+          "name": "Southwest",
+          "passengers": 1170,
+          "share": 0.0105,
+          "seen_by_tracker": true
+        }
+      ]
+    },
+    {
+      "origin": "MSP",
+      "destination": "SJU",
+      "markets": 2106,
+      "sampled_passengers": 6016,
+      "passengers": 60160,
+      "rt_p10": 159,
+      "rt_median": 466,
+      "rt_p90": 1007,
+      "rt_mean": 559,
+      "rt_deciles": [
+        159,
+        346,
+        370,
+        410,
+        466,
+        539,
+        653,
+        776,
+        1007
+      ],
+      "carriers": [
+        {
+          "code": "DL",
+          "name": "Delta",
+          "passengers": 34000,
+          "share": 0.5652,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "SY",
+          "name": "Sun Country",
+          "passengers": 21910,
+          "share": 0.3642,
+          "seen_by_tracker": false
+        },
+        {
+          "code": "F9",
+          "name": "Frontier",
+          "passengers": 1110,
+          "share": 0.0185,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "AA",
+          "name": "American",
+          "passengers": 1090,
+          "share": 0.0181,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "WN",
+          "name": "Southwest",
+          "passengers": 990,
+          "share": 0.0165,
+          "seen_by_tracker": true
+        },
+        {
+          "code": "UA",
+          "name": "United",
+          "passengers": 760,
+          "share": 0.0126,
           "seen_by_tracker": true
         }
       ]
