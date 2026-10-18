@@ -9,6 +9,16 @@
     "last_alerted_at": "2026-09-01T16:40:41Z",
     "last_alerted_price": 2796.0
   },
+  "dsm-sju-mar-sat-sat": {
+    "cooldown_days": 7,
+    "last_alerted_at": "2026-10-18T16:25:30Z",
+    "last_alerted_price": 6113.0
+  },
+  "dsm-sju-mar-sat-thu": {
+    "cooldown_days": 7,
+    "last_alerted_at": "2026-10-18T16:25:30Z",
+    "last_alerted_price": 5132.0
+  },
   "dsm-stt-jan": {
     "cooldown_days": 7,
     "last_alerted_at": "2026-08-31T20:19:44Z",
@@ -23,5 +33,10 @@
     "cooldown_days": 7,
     "last_alerted_at": "2026-08-31T20:36:43Z",
     "last_alerted_price": 2955.0
+  },
+  "ord-sju-jan-sat-thu": {
+    "cooldown_days": 7,
+    "last_alerted_at": "2026-10-18T16:25:30Z",
+    "last_alerted_price": 1248.0
   }
 }
